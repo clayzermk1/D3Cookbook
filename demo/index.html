@@ -1,0 +1,171 @@
+<!DOCTYPE HTML>
+<html lang="en_US">
+  
+  <head>
+    <title>D3Cookbook Demo Gallery</title>
+    <!-- Styles -->
+    <link rel="stylesheet" href="lib/bootstrap/css/bootstrap.min.css" type="text/css"
+    />
+    <link rel="stylesheet" href="lib/font-awesome/css/font-awesome.css" type="text/css"
+    />
+    <style></style>
+  </head>
+  
+  <body>
+    <div class="container-fluid">
+      <div class="row-fluid">
+        <div id="nav" class="span3">
+          <div class="well sidebar-nav">
+            <ul class="nav nav-list">
+              <li class="nav-header">Visualizations</li>
+              <li class="active">
+                <a href="#home">Home</a>
+              </li>
+              <li>
+                <a href="#pie">Pie</a>
+              </li>
+            </ul>
+          </div>
+          <!--/.well -->
+        </div>
+        <!--/nav-->
+        <div id="home" class="span9">
+          <div class="hero-unit">
+            <h1>D3 Cookbook</h1>
+            <p>A collection of modular, reusable d3 recipes.</p>
+          </div>
+          <div class="row-fluid">
+            <div class="span4">
+              <h2>Heading</h2>
+              <p>Donec id elit non mi porta gravida at eget metus. Fusce dapibus, tellus
+                ac cursus commodo, tortor mauris condimentum nibh, ut fermentum massa justo
+                sit amet risus. Etiam porta sem malesuada magna mollis euismod. Donec sed
+                odio dui.</p>
+              <p>
+                <a class="btn" href="#">View details &raquo;</a>
+              </p>
+            </div>
+            <!--/span-->
+            <div class="span4">
+              <h2>Heading</h2>
+              <p>Donec id elit non mi porta gravida at eget metus. Fusce dapibus, tellus
+                ac cursus commodo, tortor mauris condimentum nibh, ut fermentum massa justo
+                sit amet risus. Etiam porta sem malesuada magna mollis euismod. Donec sed
+                odio dui.</p>
+              <p>
+                <a class="btn" href="#">View details &raquo;</a>
+              </p>
+            </div>
+            <!--/span-->
+            <div class="span4">
+              <h2>Heading</h2>
+              <p>Donec id elit non mi porta gravida at eget metus. Fusce dapibus, tellus
+                ac cursus commodo, tortor mauris condimentum nibh, ut fermentum massa justo
+                sit amet risus. Etiam porta sem malesuada magna mollis euismod. Donec sed
+                odio dui.</p>
+              <p>
+                <a class="btn" href="#">View details &raquo;</a>
+              </p>
+            </div>
+            <!--/span-->
+          </div>
+          <!--/row-->
+          <div class="row-fluid">
+            <div class="span4">
+              <h2>Heading</h2>
+              <p>Donec id elit non mi porta gravida at eget metus. Fusce dapibus, tellus
+                ac cursus commodo, tortor mauris condimentum nibh, ut fermentum massa justo
+                sit amet risus. Etiam porta sem malesuada magna mollis euismod. Donec sed
+                odio dui.</p>
+              <p>
+                <a class="btn" href="#">View details &raquo;</a>
+              </p>
+            </div>
+            <!--/span-->
+            <div class="span4">
+              <h2>Heading</h2>
+              <p>Donec id elit non mi porta gravida at eget metus. Fusce dapibus, tellus
+                ac cursus commodo, tortor mauris condimentum nibh, ut fermentum massa justo
+                sit amet risus. Etiam porta sem malesuada magna mollis euismod. Donec sed
+                odio dui.</p>
+              <p>
+                <a class="btn" href="#">View details &raquo;</a>
+              </p>
+            </div>
+            <!--/span-->
+            <div class="span4">
+              <h2>Heading</h2>
+              <p>Donec id elit non mi porta gravida at eget metus. Fusce dapibus, tellus
+                ac cursus commodo, tortor mauris condimentum nibh, ut fermentum massa justo
+                sit amet risus. Etiam porta sem malesuada magna mollis euismod. Donec sed
+                odio dui.</p>
+              <p>
+                <a class="btn" href="#">View details &raquo;</a>
+              </p>
+            </div>
+            <!--/span-->
+          </div>
+          <!--/row-->
+        </div>
+        <!--/home-->
+        <div id="pie" class="span9 hide">
+          <div class="row-fluid">
+            <h1>Pie Chart</h1>
+            <div class="recipe"></div>
+          </div>
+        </div>
+        <!--/pie-->
+      </div>
+      <!--/row-->
+      <hr>
+      <footer>
+        <p>&copy; Clay Walker 2012. Licensed under the GPLv2 ONLY.</p>
+      </footer>
+    </div>
+    <!--/home-->
+    <!-- JavaScript, placed at the end of the document so the pages load faster.
+    -->
+    <script type="text/javascript" src="lib/jquery/jquery-1.8.1.min.js"></script>
+    <!-- jQuery 1.8.2 breaks support for svg events -->
+    <script type="text/javascript" src="lib/bootstrap/js/bootstrap.min.js"></script>
+    <script type="text/javascript" src="lib/d3/d3.v2.min.js"></script>
+    <script type="text/javascript" src="../dist/D3Cookbook.js"></script>
+    <script type="text/javascript">
+      var recipe;
+      $(document).on('ready', function() {
+        // Create our recipe.
+        var data = [
+          {"label": "<5", "value": 2704659, "color": "#98abc5"},
+          {"label": "5-13", "value": 4499890, "color": "#8a89a6"},
+          {"label": "14-17", "value": 2159981, "color": "#7b6888"},
+          {"label": "18-24", "value": 3853788, "color": "#6b486b"},
+          {"label": "25-44", "value": 14106543, "color": "#a05d56"},
+          {"label": "45-64", "value": 8819342, "color": "#d0743c"},
+          {"label": "≥65", "value": 612463, "color": "#ff8c00"}
+        ];
+        var options = {
+          "recipe": "pie",
+          "selector": "#pie .recipe"
+        };
+        recipe = new Recipe(data, options);
+      })
+
+      // Navigation handler.
+      .on('click', '#nav ul.nav a', function(e) {
+        // Get the hash.
+        var hash = $(e.target).attr('href');
+
+        // Hide the current nav.
+        var currentNav = $('#nav ul.nav li.active').removeClass('active').children('a').attr('href');
+        $(currentNav).hide();
+
+        // Update the navigation bar.
+        $(e.target).parent().addClass('active');
+
+        // Fade in the clicked nav.
+        $(hash).fadeIn('fast');
+      });
+    </script>
+  </body>
+
+</html>

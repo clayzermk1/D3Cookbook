@@ -1,0 +1,43 @@
+<!DOCTYPE HTML>
+<html lang="en_US">
+
+  <head>
+    <title>D3Cookbook Demo Gallery</title>
+    <!-- Styles -->
+    <link rel="stylesheet" href="lib/bootstrap/css/bootstrap.min.css" type="text/css" />
+    <link rel="stylesheet" href="lib/font-awesome/css/font-awesome.css" type="text/css" />
+    <style>
+      body {
+        margin: 20px;
+      }
+      .recipe svg {
+        border: 1px solid gold;
+      }
+    </style>
+  </head>
+
+  <body>
+    <div class="recipe"></div>
+
+    <!-- JavaScript, placed at the end of the document so the pages load faster. -->
+    <!-- jQuery 1.8.2 breaks support for svg events, use 1.8.1 instead -->
+    <script type="text/javascript" src="lib/jquery/jquery-1.8.1.min.js"></script>
+    <script type="text/javascript" src="lib/bootstrap/js/bootstrap.min.js"></script>
+    <script type="text/javascript" src="lib/d3/d3.v2.min.js"></script>
+    <script type="text/javascript" src="../dist/D3Cookbook.js"></script>
+    <script type="text/javascript">
+      var recipe;
+      $(document).on('ready', function() {
+        // Create our recipe.
+        var options = {
+          "recipe": "area",
+          "selector": ".recipe"
+        };
+        d3.json('./data/line.json', function(data) {
+          recipe = new Recipe(data, options);
+        });
+      });
+    </script>
+  </body>
+
+</html>

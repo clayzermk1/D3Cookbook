@@ -1,4 +1,4 @@
 D3Cookbook
 ==========
 
-A collection of pre-canned D3 visualizations.
+A collection of modular, reusable d3 recipes.
