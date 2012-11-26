@@ -29,7 +29,9 @@ module.exports = function(grunt) {
           '<file_strip_banner:lib/Recipe.donut.js>',
           '<file_strip_banner:lib/Recipe._cartesian.js>',
           '<file_strip_banner:lib/Recipe.line.js>',
-          '<file_strip_banner:lib/Recipe.area.js>'
+          '<file_strip_banner:lib/Recipe.area.js>',
+          '<file_strip_banner:lib/Recipe.bar.js>',
+          '<file_strip_banner:lib/Recipe.geo.js>'
         ],
         dest: 'dist/<%= pkg.name %>.js'
       }
@@ -62,7 +64,8 @@ module.exports = function(grunt) {
       globals: {
         Class: true,
         xyz: true,
-        d3: true
+        d3: true,
+        _: true
       }
     },
     uglify: {}

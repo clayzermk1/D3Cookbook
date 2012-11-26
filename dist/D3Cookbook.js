@@ -1,68 +1,13 @@
-/*! D3Cookbook - v0.1.0 - 2012-11-16
+/*! D3Cookbook - v0.1.0 - 2012-11-21
 * https://github.com/clayzermk1/D3Cookbook
 * Copyright (c) 2012 ; Licensed  */
-
-// Underscore.js variables
-var nativeForEach = Array.prototype.forEach,
-    slice = Array.prototype.slice,
-    breaker = {};
-
-// Underscore.js' defaults funciton, http://underscorejs.org/#has
-// Shortcut function for checking if an object has a given property directly
-// on itself (in other words, not on a prototype).
-var _has = function(obj, key) {
-  return Object.prototype.hasOwnProperty.call(obj, key);
-};
-
-// Underscore.js' defaults funciton, http://underscorejs.org/#each
-// The cornerstone, an `each` implementation, aka `forEach`.
-// Handles objects with the built-in `forEach`, arrays, and raw objects.
-// Delegates to **ECMAScript 5**'s native `forEach` if available.
-var _each = function(obj, iterator, context) {
-  if (obj == null) { return; }
-  if (nativeForEach && obj.forEach === nativeForEach) {
-    obj.forEach(iterator, context);
-  } else if (obj.length === +obj.length) {
-    for (var i = 0, l = obj.length; i < l; i++) {
-      if (iterator.call(context, obj[i], i, obj) === breaker) { return; }
-    }
-  } else {
-    for (var key in obj) {
-      if (_has(obj, key)) {
-        if (iterator.call(context, obj[key], key, obj) === breaker) { return; }
-      }
-    }
-  }
-};
-
-// Underscore.js' defaults funciton, http://underscorejs.org/#defaults
-// Fill in a given object with default properties.
-var _defaults = function(obj) {
-  _each(slice.call(arguments, 1), function(source) {
-    for (var prop in source) {
-      if (obj[prop] == null) { obj[prop] = source[prop]; }
-    }
-  });
-  return obj;
-};
-
-// Underscore.js' extend funciton, http://underscorejs.org/#extend
-// Extend a given object with all the properties in passed-in object(s).
-var _extend = function(obj) {
-  _each(slice.call(arguments, 1), function(source) {
-    for (var prop in source) {
-      obj[prop] = source[prop];
-    }
-  });
-  return obj;
-};
 
 // Calculates the min an array of series.
 var _min = function(seriesRA, axis) {
   var min = seriesRA[0].data[0][axis],
       smin = null;
 
-  seriesRA.forEach(function(s) {
+  _.each(seriesRA, function(s) {
     smin = d3.min(s.data, function(d) { return d[axis]; });
     if (smin < min) {
       min = smin;
@@ -77,7 +22,7 @@ var _max = function(seriesRA, axis) {
   var max = seriesRA[0].data[0][axis],
       smax = null;
 
-  seriesRA.forEach(function(s) {
+  _.each(seriesRA, function(s) {
     smax = d3.max(s.data, function(d) { return d[axis]; });
     if (smax > max) {
       max = smax;
@@ -161,7 +106,7 @@ var Recipe = Class.extend({
   svg: null,
 
   init: function(data, options){
-    this.options = _defaults(options, this.defaultOptions);
+    this.options = _.defaults(options, this.defaultOptions);
     this.svg = d3.select(this.options.selector ? this.options.selector : "body").append("svg")
         .attr("width", this.options.width + this.options.margin.left + this.options.margin.right)
         .attr("height", this.options.height + this.options.margin.top + this.options.margin.bottom)
@@ -198,8 +143,8 @@ Recipe['pie'] = Recipe.extend({
   },
 
   init: function(recipe){
-    this.options = _defaults(recipe.options, this.defaultOptions);
-    this.svg = recipe.svg.attr("transform", "translate(" + this.options.width / 2 + "," + this.options.height / 2 + ")");
+    this.options = _.defaults(recipe.options, this.defaultOptions);
+    this.svg = recipe.svg.attr("transform", "translate(" + ( (this.options.width / 2) + this.options.margin.left ) + "," + ( (this.options.height / 2) + this.options.margin.top ) + ")");
     this.update(recipe.data);
     return this;
   },
@@ -218,20 +163,21 @@ Recipe['pie'] = Recipe.extend({
     }, this);
 
     var g = this.svg.selectAll(".arc")
-        .data(pie(this.data))
-      .enter().append("g")
+      .data(pie(this.data))
+      .enter()
+      .append("g")
         .attr("class", "arc");
 
     g.append("path")
-        .attr("d", arc)
-        .style("fill", function(d) { return d.data.color; })
-        .style("stroke", this.options.pathStroke);
+      .attr("d", arc)
+      .style("fill", function(d) { return d.data.color; })
+      .style("stroke", this.options.pathStroke);
 
     g.append("text")
-        .attr("transform", function(d) { return "translate(" + arc.centroid(d) + ")"; })
-        .attr("dy", ".35em")
-        .style("text-anchor", "middle")
-        .text(function(d) { return d.data.label; });
+      .attr("transform", function(d) { return "translate(" + arc.centroid(d) + ")"; })
+      .attr("dy", ".35em")
+      .style("text-anchor", "middle")
+      .text(function(d) { return d.data.label; });
   }
 });
 
@@ -246,70 +192,80 @@ Recipe['donut'] = Recipe['pie'].extend({
 
 Recipe['_cartesian'] = Recipe.extend({
   defaultOptions: {
-    xFormatter: d3.time.format("%d-%b-%y").parse,
-    yFormatter: function(y) { return +y; },
-    xMin: _min,
-    xMax: _max,
-    yMin: function() { return 0; }, //you might also want to use _min() from utility.js
-    yMax: _max
+    xAxisFormatter: function(d) { return d; },
+    yAxisFormatter: function(d) { return d; },
+    xFormatter: function(d) { return +d; },
+    yFormatter: function(d) { return +d; }
   },
 
   x: null,
   y: null,
+  xAxis: null,
+  yAxis: null,
 
   init: function(recipe){
-    this.options = _defaults(recipe.options, this.defaultOptions);
+    this.options = _.defaults(recipe.options, this.defaultOptions);
     this.svg = recipe.svg.attr("transform", "translate(" + this.options.margin.left + "," + this.options.margin.top + ")");
     this.data = recipe.data;
 
-    this.data.series.forEach(function(s) {
-      s.data.forEach(function(d) {
+    // Format data.
+    _.each(this.data.series, function(s) {
+      _.each(s.data, function(d) {
         d.x = this.options.xFormatter(d.x);
         d.y = this.options.yFormatter(d.y);
       }, this);
     }, this);
 
-    this.x = d3.time.scale()
-      .domain([this.options.xMin(this.data.series, "x"), this.options.xMax(this.data.series, "x")])
-      .range([0, this.options.width]);
-    this.y = d3.scale.linear()
-      .domain([this.options.yMin(this.data.series, "y"), this.options.yMax(this.data.series, "y")])
-      .range([this.options.height, 0]);
-
+    this.createScales();
+    this.createAxes();
     this.draw();
     this.drawAxes();
 
     return this;
   },
 
-  drawAxes: function() {
-    var xAxis = d3.svg.axis()
-      .scale(this.x)
-      .orient("bottom");
-    var yAxis = d3.svg.axis()
-      .scale(this.y)
-      .orient("left");
+  createScales: function() {
+    this.x = d3.scale.linear()
+      .domain([_min(this.data.series, "x"), _max(this.data.series, "x")])
+      .range([0, this.options.width]);
 
+    this.y = d3.scale.linear()
+      .domain([_min(this.data.series, "y"), _max(this.data.series, "y")])
+      .range([this.options.height, 0]);
+  },
+
+  createAxes: function() {
+    this.xAxis = d3.svg.axis()
+      .scale(this.x)
+      .orient("bottom")
+      .tickFormat(this.options.xAxisFormatter);
+    this.yAxis = d3.svg.axis()
+      .scale(this.y)
+      .orient("left")
+      .tickFormat(this.options.yAxisFormatter);
+  },
+
+  drawAxes: function() {
     this.svg.append("g")
       .attr("class", "x axis")
       .attr("transform", "translate(0," + this.options.height + ")")
-      .call(xAxis)
-    .append("text")
-      .attr("x", this.options.width - 6)
-      .attr("y", -6)
-      .attr("dx", ".71em")
-      .style("text-anchor", "end")
-      .text(this.data.axis.labels.x ? this.data.axis.labels.x : "");
+      .call(this.xAxis)
+      .append("text")
+        .attr("x", this.options.width - 6)
+        .attr("y", -6)
+        .attr("dx", ".71em")
+        .style("text-anchor", "end")
+        .text(this.data.axis.labels.x ? this.data.axis.labels.x : "");
 
     this.svg.append("g")
       .attr("class", "y axis")
-      .call(yAxis)
-    .append("text")
-      .attr("transform", "rotate(-90)")
-      .attr("y", 6)
-      .attr("dy", ".71em")
-      .style("text-anchor", "end")
-      .text(this.data.axis.labels.y ? this.data.axis.labels.y : "");
+      .call(this.yAxis)
+      .append("text")
+        .attr("transform", "rotate(-90)")
+        .attr("y", 6)
+        .attr("dy", ".71em")
+        .style("text-anchor", "end")
+        .text(this.data.axis.labels.y ? this.data.axis.labels.y : "");
 
     d3.selectAll('.axis path, .axis line')
       .style("fill", this.data.axis.style && this.data.axis.style['fill'] ? this.data.axis.style['fill'] : "none")
@@ -319,43 +275,219 @@ Recipe['_cartesian'] = Recipe.extend({
 });
 
 Recipe['line'] = Recipe['_cartesian'].extend({
+  defaultOptions: {
+    xAxisFormatter: d3.time.format("%d-%b-%y").format,
+    yAxisFormatter: function(d) { return d; },
+    xFormatter: d3.time.format("%d-%b-%y").parse,
+    yFormatter: function(d) { return +d; }
+  },
+
+  createScales: function() {
+    this.x = d3.time.scale()
+      .domain([_min(this.data.series, "x"), _max(this.data.series, "x")])
+      .range([0, this.options.width]);
+
+    this.y = d3.scale.linear()
+      .domain([_min(this.data.series, "y"), _max(this.data.series, "y")])
+      .range([this.options.height, 0]);
+  },
+
   draw: function() {
     var x = this.x;
     var y = this.y;
+    var g = null;
 
-    this.data.series.forEach(function(s) {
-      this.svg.append("path")
-        .datum(s.data)
-        .attr("class", "line")
-        .style("fill", s.style && s.style['fill'] ? s.style['fill'] : 'none')
-        .style("stroke", s.style && s.style['stroke'] ? s.style['stroke'] : 'steelblue')
-        .style("stroke-width", s.style && s.style['stroke-width'] ? s.style['stroke-wdith'] : '1.5px')
-//        .style("fill", "none")
-//        .style("stroke", 'steelblue')
-//        .style("stroke-width", '1.5px')
-        .attr("d", d3.svg.line()
-          .x(function(d) { return x(d.x); })
-          .y(function(d) { return y(d.y); })
-        );
+    _.each(this.data.series, function(s) {
+      this.svg
+        .append("g")
+          .attr("id", s.label)
+          .attr("class", "series")
+          .append("path")
+            .datum(s.data)
+            .attr("class", "line")
+            .attr("d", d3.svg.line()
+              .x(function(d) { return x(d.x); })
+              .y(function(d) { return y(d.y); })
+            )
+            .style("fill", s.style && s.style['fill'] ? s.style['fill'] : 'none')
+            .style("stroke", s.style && s.style['stroke'] ? s.style['stroke'] : 'steelblue')
+            .style("stroke-width", s.style && s.style['stroke-width'] ? s.style['stroke-wdith'] : '1.5px');
     }, this);
   }
 });
 
 Recipe['area'] = Recipe['_cartesian'].extend({
+  defaultOptions: {
+    xAxisFormatter: d3.time.format("%d-%b-%y").format,
+    yAxisFormatter: function(d) { return d; },
+    xFormatter: d3.time.format("%d-%b-%y").parse,
+    yFormatter: function(d) { return +d; }
+  },
+
+  createScales: function() {
+    this.x = d3.time.scale()
+      .domain([_min(this.data.series, "x"), _max(this.data.series, "x")])
+      .range([0, this.options.width]);
+
+    this.y = d3.scale.linear()
+      .domain([0, _max(this.data.series, "y")])
+      .range([this.options.height, 0]);
+  },
+
   draw: function() {
     var x = this.x;
     var y = this.y;
 
     this.data.series.forEach(function(s) {
-      this.svg.append("path")
-        .datum(s.data)
-        .attr("class", "area")
-        .style("fill", s.style && s.style['fill'] ? s.style['fill'] : 'steelblue')
-        .attr("d", d3.svg.area()
-          .x(function(d) { return x(d.x); })
-          .y0(this.options.height)
-          .y1(function(d) { return y(d.y); })
-        );
+      this.svg
+        .append("g")
+          .attr("id", s.label)
+          .attr("class", "series")
+          .append("path")
+            .datum(s.data)
+            .attr("class", "area")
+            .style("fill", s.style && s.style['fill'] ? s.style['fill'] : 'steelblue')
+            .attr("d", d3.svg.area()
+              .x(function(d) { return x(d.x); })
+              .y0(this.options.height)
+              .y1(function(d) { return y(d.y); })
+            );
     }, this);
+  }
+});
+
+Recipe['bar'] = Recipe['_cartesian'].extend({
+  defaultOptions: {
+    xAxisFormatter: function(d) { return d; },
+    yAxisFormatter: d3.format(".0%"),
+    xFormatter: function(d) { return d; },
+    yFormatter: function(d) { return +d; }
+  },
+
+  createScales: function() {
+    this.x = d3.scale.ordinal()
+      .domain(
+        _.chain(this.data.series)
+          .reduce(function(m, d) {
+            return m.concat(d.data);
+          }, [])
+          .pluck("x")
+          .uniq()
+          .sortBy("value")
+          .value()
+      )
+      .rangeRoundBands([0, this.options.width], 0.1);
+
+    this.y = d3.scale.linear()
+      .domain([0, _max(this.data.series, "y")])
+      .range([this.options.height, 0]);
+  },
+
+  draw: function() {
+    var x = this.x;
+    var y = this.y;
+    var height = this.options.height;
+
+    _.each(this.data.series, function(s) {
+      this.svg
+        .append("g")
+        .attr("id", s.label)
+        .attr("class", "series")
+        .selectAll(".bar")
+        .data(s.data)
+        .enter()
+        .append("rect")
+          .attr("class", "bar")
+          .attr("x", function(d) { return x(d.x); })
+          .attr("width", x.rangeBand())
+          .attr("y", function(d) { return y(d.y); })
+          .attr("height", function(d) { return height - y(d.y); })
+          .style("fill", s.style && s.style['fill'] ? s.style['fill'] : 'steelblue');
+    }, this);
+  }
+});
+
+Recipe['geo'] = Recipe.extend({
+  defaultOptions: {
+    "projection": "mercator",
+    "origin": [0, 0],
+    "zoom": 1.0
+  },
+
+  init: function(recipe){
+    this.options = _.defaults(recipe.options, this.defaultOptions);
+    this.svg = recipe.svg;
+    this.update(recipe.data);
+    return this;
+  },
+
+  draw: function() {
+    var xyproj = d3.geo[this.options.projection](this.options.origin);
+
+    switch (this.options.projection) {
+      case "mercator":
+        xyproj = xyproj
+          //.scale(Math.max(this.options.width / 960, this.options.height / 500) * 100 * this.options.zoom)
+          .scale(Math.min(this.options.width, this.options.height) * (Math.min(this.options.width, this.options.height) / 500) * this.options.zoom)
+          //.translate([( (-this.options.origin[0] / 180) * this.options.zoom * 500) + (this.options.width / 2), ( (this.options.origin[1] / 180) * this.options.zoom * 500) + (this.options.height / 2)]);
+          .translate([this.options.width / 2, (this.options.height / 2) + (0.1 * this.options.height)]);
+
+        this.svg
+          .selectAll("path")
+            .data(this.data.features)
+            .enter()
+            .append("path")
+              .attr("d", d3.geo.path().projection(xyproj));
+        break;
+      case "albers":
+        var pdiff = 180 * this.options.height / 500 * this.options.zoom / 3;
+
+        xyproj = xyproj
+          .parallels([ this.options.origin[1] + pdiff, this.options.origin[1] - pdiff + 0.00001 ]);
+          //.scale(Math.min(this.options.width, this.options.height) * 0.25 * this.options.zoom);
+
+        this.svg
+          .selectAll("path")
+            .data(this.data.features)
+            .enter()
+            .append("path")
+              .attr("d", d3.geo.path().projection(xyproj));
+        break;
+      case "albersUsa":
+        xyproj = xyproj
+          //.scale( (Math.min(this.options.width, this.options.height) / 2) * 4 * this.options.zoom)
+          //.scale(Math.min(this.options.width, this.options.height) * Math.max( (this.options.width / 960), (this.options.height / 500) ) * 2 * this.options.zoom)
+          .scale(Math.min(this.options.width, this.options.height) * (Math.max(this.options.width, this.options.height) / 1000) * this.options.zoom)
+          .translate([this.options.width / 2, this.options.height / 2]);
+
+        this.svg
+          .selectAll("path")
+            .data(this.data.features)
+            .enter()
+            .append("path")
+              .attr("d", d3.geo.path().projection(xyproj));
+        break;
+      case "orthographic": //TODO broken because d3.geo.circle.clip API is not finalized in 3.0.0pre
+        xyproj = xyproj
+          .scale( (Math.min(this.options.width, this.options.height) / 2) * this.options.zoom)
+          .translate([this.options.width / 2, this.options.height / 2]);
+
+        this.svg
+          .selectAll("path")
+            //.data(this.data.features.map(d3.geo.circle().origin(this.options.origin)))
+            .data(this.data.features) //TODO fix this, causes the back of the world to show through
+            .enter()
+            .append("path")
+              .attr("d", d3.geo.path().projection(xyproj));
+        break;
+      default:
+        this.svg
+          .selectAll("path")
+            .data(this.data.features)
+            .enter()
+            .append("path")
+              .attr("d", d3.geo.path().projection(xyproj));
+        break;
+    }
   }
 });

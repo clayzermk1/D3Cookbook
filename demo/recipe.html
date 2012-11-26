@@ -20,21 +20,22 @@
     <div class="recipe"></div>
 
     <!-- JavaScript, placed at the end of the document so the pages load faster. -->
-    <!-- jQuery 1.8.2 breaks support for svg events, use 1.8.1 instead -->
+    <!-- jQuery 1.8.2 breaks support for events on svg selectors, use 1.8.1 instead -->
     <script type="text/javascript" src="lib/jquery/jquery-1.8.1.min.js"></script>
+    <script type="text/javascript" src="lib/lodash/lodash.min.js"></script>
     <script type="text/javascript" src="lib/bootstrap/js/bootstrap.min.js"></script>
-    <script type="text/javascript" src="lib/d3/d3.v2.min.js"></script>
+    <script type="text/javascript" src="lib/d3/d3.v3.js"></script>
     <script type="text/javascript" src="../dist/D3Cookbook.js"></script>
     <script type="text/javascript">
       var recipe;
       $(document).on('ready', function() {
         // Create our recipe.
         var options = {
-          "recipe": "area",
+          "recipe": "bar",
           "selector": ".recipe"
         };
-        d3.json('./data/line.json', function(data) {
-          recipe = new Recipe(data, options);
+        d3.json('./data/xy_discrete.json', function(error, json) {
+          recipe = new Recipe(json, options);
         });
       });
     </script>

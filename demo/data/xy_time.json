@@ -7,10 +7,9 @@
   },
   "series": [
     {
-      "label": "Dummy Data",
+      "label": "Dummy Time Data",
       "style": {
-        "stroke": "red",
-        "fill": "red"
+        "stroke": "red"
       },
       "data": [
         {"x": "1-May-12", "y": 582.13},
