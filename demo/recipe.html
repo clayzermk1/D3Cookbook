@@ -28,14 +28,39 @@
     <script type="text/javascript" src="../dist/D3Cookbook.js"></script>
     <script type="text/javascript">
       var recipe;
+      var initData, newData;
       $(document).on('ready', function() {
         // Create our recipe.
         var options = {
-          "recipe": "bar",
-          "selector": ".recipe"
+          "recipe": "line",
+          "selector": ".recipe",
+          "xKey": "date",
+          "yKey": "close",
+//          "xKey": "sepalWidth",
+//          "yKey": "sepalLength",
+//          "rKey": "petalLength",
+//          "seriesKey": function(d) { return d3.time.day(d.date); },
+//          "seriesKey": "species",
+          "xFormatter": d3.time.format("%d-%b-%y").parse,
+//          "xFormatter": function(d) {
+//            return new Date(2001,
+//              d.toString().substring(0, 2) - 1,
+//              d.toString().substring(2, 4),
+//              d.toString().substring(4, 6),
+//              d.toString().substring(6, 8));
+//          },
+          "xScale": d3.time.scale,
+//          "rFormatter": function(d) { return +d; },
+          "xAxisLabel": "X Axis",
+          "yAxisLabel": "Y Axis",
+//          "rAxisLabel": "Point Radius"
+          "xAxisFormatter": d3.time.format("%x")
         };
-        d3.json('./data/xy_discrete.json', function(error, json) {
-          recipe = new Recipe(json, options);
+//        d3.csv("./data/flights-small.txt", function(error, json) {
+        d3.json('./data/stocks.json', function(error, json) {
+          initData = json.slice(0, 19);
+          newData = json.slice(0, 39);
+          recipe = new Recipe[options.recipe](initData, options);
         });
       });
     </script>

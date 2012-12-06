@@ -1,36 +1,6 @@
-/*! D3Cookbook - v0.1.0 - 2012-11-21
+/*! D3Cookbook - v0.1.0 - 2012-12-05
 * https://github.com/clayzermk1/D3Cookbook
 * Copyright (c) 2012 ; Licensed  */
-
-// Calculates the min an array of series.
-var _min = function(seriesRA, axis) {
-  var min = seriesRA[0].data[0][axis],
-      smin = null;
-
-  _.each(seriesRA, function(s) {
-    smin = d3.min(s.data, function(d) { return d[axis]; });
-    if (smin < min) {
-      min = smin;
-    }
-  });
-
-  return min;
-};
-
-// Calculates the max of an array of series.
-var _max = function(seriesRA, axis) {
-  var max = seriesRA[0].data[0][axis],
-      smax = null;
-
-  _.each(seriesRA, function(s) {
-    smax = d3.max(s.data, function(d) { return d[axis]; });
-    if (smax > max) {
-      max = smax;
-    }
-  });
-
-  return max;
-};
 
 // Simple JavaScript Inheritance, John Resig http://ejohn.org/
 (function(){
@@ -112,29 +82,17 @@ var Recipe = Class.extend({
         .attr("height", this.options.height + this.options.margin.top + this.options.margin.bottom)
       .append("g");
 
-    this.update(data);
+    this.parseData(data);
 
-    if (options.recipe) {
-      return this.cook(this.options.recipe);
-    } else {
-      return this;
-    }
-  },
-
-  cook: function(recipeName) {
-    return new Recipe[recipeName](this);
-  },
-
-  update: function(data) {
-    this.data = data;
-    this.draw();
     return this;
   },
 
-  draw: function() {}
+  parseData: function(data) {
+    this.data = data;
+  }
 });
 
-Recipe['pie'] = Recipe.extend({
+Recipe['pie'] = Recipe.extend({ //TODO incomplete! needs dynamic data testing, changes to cartesian merged in.
   defaultOptions: {
     r: 250,
     rh: 0,
@@ -151,7 +109,7 @@ Recipe['pie'] = Recipe.extend({
 
   draw: function() {
     var arc = d3.svg.arc()
-      .outerRadius(this.options.r - Math.max(this.options.margin.top, this.options.margin.right, this.options.margin.bottom, this.options.margin.left))
+      .outerRadius(this.options.r)// - Math.max(this.options.margin.top, this.options.margin.right, this.options.margin.bottom, this.options.margin.left))
       .innerRadius(this.options.rh);
 
     var pie = d3.layout.pie()
@@ -192,29 +150,38 @@ Recipe['donut'] = Recipe['pie'].extend({
 
 Recipe['_cartesian'] = Recipe.extend({
   defaultOptions: {
+    margin: {top: 50, right: 50, bottom: 50, left: 50},
+    height: 500,
+    width: 500,
+    xKey: "x",
+    yKey: "y",
+    xFormatter: function(d) { return +d; },
+    yFormatter: function(d) { return +d; },
+    xScale: d3.scale.linear,
+    yScale: d3.scale.linear,
+    xAxisLabel: "",
+    yAxisLabel: "",
     xAxisFormatter: function(d) { return d; },
     yAxisFormatter: function(d) { return d; },
-    xFormatter: function(d) { return +d; },
-    yFormatter: function(d) { return +d; }
+    seriesKey: "",
+    colors: d3.scale.category10()
   },
 
+  nest: null,
   x: null,
   y: null,
   xAxis: null,
   yAxis: null,
 
-  init: function(recipe){
-    this.options = _.defaults(recipe.options, this.defaultOptions);
-    this.svg = recipe.svg.attr("transform", "translate(" + this.options.margin.left + "," + this.options.margin.top + ")");
-    this.data = recipe.data;
+  init: function(data, options){
+    this._super(data, options);
 
-    // Format data.
-    _.each(this.data.series, function(s) {
-      _.each(s.data, function(d) {
-        d.x = this.options.xFormatter(d.x);
-        d.y = this.options.yFormatter(d.y);
-      }, this);
+    _.each(this.data, function(d) {
+        d[this.options.xKey] = this.options.xFormatter(d[this.options.xKey]);
+        d[this.options.yKey] = this.options.yFormatter(d[this.options.yKey]);
     }, this);
+
+    this.svg.attr("transform", "translate(" + this.options.margin.left + "," + this.options.margin.top + ")");
 
     this.createScales();
     this.createAxes();
@@ -224,14 +191,28 @@ Recipe['_cartesian'] = Recipe.extend({
     return this;
   },
 
+  parseData: function(data) {
+    this.data = data;
+
+    // Nest the data by series.
+    var seriesKey = this.options.seriesKey;
+    this.nest = d3.nest()
+      .key(_.isFunction(seriesKey) ? seriesKey : function(d) { return d[seriesKey]; })
+      .entries(this.data);
+  },
+
   createScales: function() {
-    this.x = d3.scale.linear()
-      .domain([_min(this.data.series, "x"), _max(this.data.series, "x")])
+    var xKey = this.options.xKey;
+    var yKey = this.options.yKey;
+
+    this.x = this.options.xScale()
+      .domain(d3.extent(this.data, function(d) { return d[xKey]; }))
       .range([0, this.options.width]);
 
-    this.y = d3.scale.linear()
-      .domain([_min(this.data.series, "y"), _max(this.data.series, "y")])
-      .range([this.options.height, 0]);
+    this.y = this.options.yScale()
+      .domain(d3.extent(this.data, function(d) { return d[yKey]; }))
+      .range([this.options.height, 0])
+      .nice();
   },
 
   createAxes: function() {
@@ -239,6 +220,7 @@ Recipe['_cartesian'] = Recipe.extend({
       .scale(this.x)
       .orient("bottom")
       .tickFormat(this.options.xAxisFormatter);
+
     this.yAxis = d3.svg.axis()
       .scale(this.y)
       .orient("left")
@@ -251,112 +233,116 @@ Recipe['_cartesian'] = Recipe.extend({
       .attr("transform", "translate(0," + this.options.height + ")")
       .call(this.xAxis)
       .append("text")
-        .attr("x", this.options.width - 6)
+        .attr("x", this.options.width - 10)
         .attr("y", -6)
         .attr("dx", ".71em")
         .style("text-anchor", "end")
-        .text(this.data.axis.labels.x ? this.data.axis.labels.x : "");
+        .text(this.options.xAxisLabel);
 
     this.svg.append("g")
       .attr("class", "y axis")
       .call(this.yAxis)
       .append("text")
-        .attr("transform", "rotate(-90)")
-        .attr("y", 6)
+        .attr("transform", "rotate(90)")
+        .attr("y", -18)
         .attr("dy", ".71em")
-        .style("text-anchor", "end")
-        .text(this.data.axis.labels.y ? this.data.axis.labels.y : "");
+        .style("text-anchor", "beginning")
+        .text(this.options.yAxisLabel);
 
     d3.selectAll('.axis path, .axis line')
-      .style("fill", this.data.axis.style && this.data.axis.style['fill'] ? this.data.axis.style['fill'] : "none")
-      .style("stroke", this.data.axis.style && this.data.axis.style['stroke'] ? this.data.axis.style['stroke'] : "#000")
-      .style("shape-rendering", this.data.axis.style && this.data.axis.style['shape-rendering'] ? this.data.axis.style['shape-rendering'] : "crispEdges");
+      .style("fill", "none")
+      .style("stroke", "black")
+      .style("shape-rendering", "crispEdges");
+  },
+
+  update: function(data) {
+    this.parseData(data);
+    this.draw();
   }
 });
 
-Recipe['line'] = Recipe['_cartesian'].extend({
-  defaultOptions: {
-    xAxisFormatter: d3.time.format("%d-%b-%y").format,
-    yAxisFormatter: function(d) { return d; },
-    xFormatter: d3.time.format("%d-%b-%y").parse,
-    yFormatter: function(d) { return +d; }
-  },
-
-  createScales: function() {
-    this.x = d3.time.scale()
-      .domain([_min(this.data.series, "x"), _max(this.data.series, "x")])
-      .range([0, this.options.width]);
-
-    this.y = d3.scale.linear()
-      .domain([_min(this.data.series, "y"), _max(this.data.series, "y")])
-      .range([this.options.height, 0]);
-  },
-
+Recipe['line'] = Recipe['_cartesian'].extend({ //TODO incomplete! need updates to work dynamically
   draw: function() {
     var x = this.x;
     var y = this.y;
-    var g = null;
+    var xKey = this.options.xKey;
+    var yKey = this.options.yKey;
+    var seriesKey = this.options.seriesKey;
+    var colors = this.options.colors;
 
-    _.each(this.data.series, function(s) {
-      this.svg
-        .append("g")
-          .attr("id", s.label)
-          .attr("class", "series")
-          .append("path")
-            .datum(s.data)
-            .attr("class", "line")
-            .attr("d", d3.svg.line()
-              .x(function(d) { return x(d.x); })
-              .y(function(d) { return y(d.y); })
-            )
-            .style("fill", s.style && s.style['fill'] ? s.style['fill'] : 'none')
-            .style("stroke", s.style && s.style['stroke'] ? s.style['stroke'] : 'steelblue')
-            .style("stroke-width", s.style && s.style['stroke-width'] ? s.style['stroke-wdith'] : '1.5px');
-    }, this);
+//    this.svg.selectAll(".series")
+//      .data(this.nest)
+//      .enter()
+//      .append("g")
+//        .attr("id", function(s) {
+//          return s.key; })
+//        .attr("class", "series")
+//        .append("path")
+//          .datum(function(s) {
+//            return s.values; })
+//          .attr("d", d3.svg.line()
+//            .x(function(d) {
+//              return x(d[xKey]); })
+//            .y(function(d) { return y(d[yKey]); })
+//          )
+//          .style("fill", 'none')
+//          .style("stroke", function(d) {
+//            return colors(d[seriesKey]); })
+//          .style("stroke-width", '1.5px');
+    var series = this.svg.selectAll(".series")
+      .data(this.nest);
+      series
+      .enter()
+      .append("g")
+        .attr("class", "series")
+        .attr("id", function(s) {
+          return s.key; })
+        .append("path")
+          .datum(function(s) {
+            return s.values; })
+          .attr("d", d3.svg.line()
+            .x(function(d) {
+              return x(d[xKey]); })
+            .y(function(d) { return y(d[yKey]); })
+          )
+          .style("fill", 'none')
+          .style("stroke", function(d) {
+            return colors(d[seriesKey]); })
+          .style("stroke-width", '1.5px');
   }
 });
 
-Recipe['area'] = Recipe['_cartesian'].extend({
-  defaultOptions: {
-    xAxisFormatter: d3.time.format("%d-%b-%y").format,
-    yAxisFormatter: function(d) { return d; },
-    xFormatter: d3.time.format("%d-%b-%y").parse,
-    yFormatter: function(d) { return +d; }
-  },
-
-  createScales: function() {
-    this.x = d3.time.scale()
-      .domain([_min(this.data.series, "x"), _max(this.data.series, "x")])
-      .range([0, this.options.width]);
-
-    this.y = d3.scale.linear()
-      .domain([0, _max(this.data.series, "y")])
-      .range([this.options.height, 0]);
-  },
-
+Recipe['area'] = Recipe['_cartesian'].extend({ //TODO need to migrate to new cartesian model!
   draw: function() {
     var x = this.x;
     var y = this.y;
+    var xKey = this.options.xKey;
+    var yKey = this.options.yKey;
+    var seriesKey = this.options.seriesKey;
+    var colors = this.options.colors;
 
-    this.data.series.forEach(function(s) {
-      this.svg
-        .append("g")
-          .attr("id", s.label)
-          .attr("class", "series")
-          .append("path")
-            .datum(s.data)
-            .attr("class", "area")
-            .style("fill", s.style && s.style['fill'] ? s.style['fill'] : 'steelblue')
-            .attr("d", d3.svg.area()
-              .x(function(d) { return x(d.x); })
-              .y0(this.options.height)
-              .y1(function(d) { return y(d.y); })
-            );
-    }, this);
+    this.svg.selectAll(".series")
+      .data(d3.nest()
+        .key(_.isFunction(seriesKey) ? seriesKey : function(d) { return d[seriesKey]; })
+        .entries(this.data)
+      )
+      .enter()
+      .append("g")
+        .attr("id", function(s) { return s.key; })
+        .attr("class", "series")
+        .append("path")
+          .datum(function(s) { return s.values; })
+          .attr("d", d3.svg.area()
+            .x(function(d) { return x(d[xKey]); })
+            .y0(this.options.height)
+            .y1(function(d) { return y(d[yKey]); })
+          )
+          .style("fill", function(d) { return colors(d[0][seriesKey]); })
+          .style("fill-opacity", 0.5);
   }
 });
 
-Recipe['bar'] = Recipe['_cartesian'].extend({
+Recipe['bar'] = Recipe['_cartesian'].extend({ //TODO need to migrate to new cartesian model!
   defaultOptions: {
     xAxisFormatter: function(d) { return d; },
     yAxisFormatter: d3.format(".0%"),
@@ -379,7 +365,7 @@ Recipe['bar'] = Recipe['_cartesian'].extend({
       .rangeRoundBands([0, this.options.width], 0.1);
 
     this.y = d3.scale.linear()
-      .domain([0, _max(this.data.series, "y")])
+      .domain([0, d3.max(this.data, function(d) { return d; })]) //TODO check this.
       .range([this.options.height, 0]);
   },
 
@@ -407,7 +393,210 @@ Recipe['bar'] = Recipe['_cartesian'].extend({
   }
 });
 
-Recipe['geo'] = Recipe.extend({
+Recipe['scatter'] = Recipe['_cartesian'].extend({ //TODO incomplete! need updates to work dynamically.
+  defaultOptions: {
+    margin: {top: 50, right: 50, bottom: 50, left: 50},
+    height: 500,
+    width: 500,
+    xKey: "x",
+    yKey: "y",
+    rKey: "",
+    xFormatter: function(d) { return +d; },
+    yFormatter: function(d) { return +d; },
+    rFormatter: function(d) { return +d; },
+    xScale: d3.scale.linear,
+    yScale: d3.scale.linear,
+    xAxisLabel: "",
+    yAxisLabel: "",
+    rAxisLabel: "",
+    xAxisFormatter: function(d) { return d; },
+    yAxisFormatter: function(d) { return d; },
+    seriesKey: "",
+    colors: d3.scale.category10()
+  },
+
+  draw: function() {
+    var x = this.x;
+    var y = this.y;
+    var xKey = this.options.xKey;
+    var yKey = this.options.yKey;
+    var rKey = this.options.rKey;
+    var rFormatter = this.options.rFormatter;
+    var seriesKey = this.options.seriesKey;
+    var colors = this.options.colors;
+
+//    this.svg.selectAll(".dot")
+//        .data(this.data)
+//        .enter()
+//        .append("circle")
+//          .attr("class", "dot " + function(d) { return d[seriesKey]; })
+//          .attr("r", function(d) { return rFormatter(d[rKey] ? d[rKey] : 1); })
+//          .attr("cx", function(d) { return x(d[xKey]); })
+//          .attr("cy", function(d) { return y(d[yKey]); })
+//          .style("fill", function(d) { return colors(d[seriesKey]); });
+    var series = this.svg.selectAll(".series")
+      .data(this.nest);
+
+    series
+      .enter()
+      .append("g")
+        .attr("id", function(s) { return s.key; })
+        .attr("class", "series");
+
+    var dot = series.selectAll("dot")
+          .data(function(s) {
+              return s.values; });
+        dot
+          .enter()
+          .append("circle")
+            .attr("class", "dot");
+
+            dot
+            .attr("r", function(d) {
+              return rFormatter(d[rKey] ? d[rKey] : 1); })
+            .attr("cx", function(d) {
+              return x(d[xKey]); })
+            .attr("cy", function(d) {
+              return y(d[yKey]); })
+            .style("fill", function(d) {
+              return colors(d[seriesKey]); });
+
+              dot.exit().remove();
+              series.exit().remove();
+  },
+
+  drawAxes: function() {
+    if (!_.isEmpty(this.options.rKey)) {
+      this.svg.append("g")
+        .attr("class", "r axis")
+        .attr("transform", "translate(0, 0)")
+        .append("text")
+          .attr("x", this.options.width / 2)
+          .attr("y", -10)
+          .attr("dx", ".71em")
+          .style("text-anchor", "middle")
+          .text(this.options.rAxisLabel);
+    }
+
+    this._super();
+  }
+});
+
+Recipe['spider'] = Recipe.extend({ //TODO incomplete! need to merge in changes from cartesian and build out in general.
+  defaultOptions: {
+    r: 250,
+    rh: 50,
+    interpolation: "cardinal-closed",
+    xAxisFormatter: function(d) { return d; },
+    yAxisFormatter: d3.format(".0%"),
+    xFormatter: function(d) { return d; },
+    yFormatter: function(d) { return +d; }
+  },
+
+  x: null,
+  y: null,
+  xAxis: null,
+  yAxis: null,
+
+  init: function(recipe){
+    this.options = _.defaults(recipe.options, this.defaultOptions);
+    this.svg = recipe.svg.attr("transform", "translate(" + ( (this.options.width / 2) + this.options.margin.left ) + "," + ( (this.options.height / 2) + this.options.margin.top ) + ")");
+    this.data = recipe.data;
+
+    // Format data.
+    _.each(this.data.series, function(s) {
+      _.each(s.data, function(d) {
+        d.x = this.options.xFormatter(d.x);
+        d.y = this.options.yFormatter(d.y);
+      }, this);
+    }, this);
+
+    this.createScales();
+    this.createAxes();
+    this.draw();
+    this.drawAxes();
+
+    return this;
+  },
+
+  createScales: function() {
+    this.x = d3.time.scale()
+      .domain([
+        0,
+        _.chain(this.data.series)
+          .reduce(function(m, d) {
+            return m.concat(d.data);
+          }, [])
+          .pluck("x")
+          .uniq()
+          .sortBy("value")
+          .value().length
+      ])
+      .range([0, 2 * Math.PI]);
+
+    this.y = d3.scale.linear()
+      .domain([0, d3.max(this.data, function(d) { return d; })]) //TODO check this
+      .range([this.options.r, this.options.rh]);
+  },
+
+  createAxes: function() {
+    this.xAxis = d3.svg.axis()
+      .scale(this.x)
+      .orient("bottom")
+      .tickFormat(this.options.xAxisFormatter);
+    this.yAxis = d3.svg.axis()
+      .scale(this.y)
+      .orient("left")
+      .tickFormat(this.options.yAxisFormatter);
+  },
+
+  drawAxes: function() {
+    var x = this.x;
+    var y = this.y;
+    var r = this.options.r;
+    var rh = this.options.rh;
+    var xAxisFormatter = this.options.xAxisFormatter;
+
+    this.svg.selectAll(".axis")
+      .data(d3.range(x.domain()[1]))
+      .enter()
+      .append("g")
+        .attr("class", "axis")
+        .attr("transform", function(d) { return "rotate(" + x(d) * 180 / Math.PI + ")"; })
+        .call(d3.svg.axis()
+          .scale(y.copy().range([-rh, -r]))
+          .orient("left"))
+        .append("text")
+          .attr("y", -r - 12)
+          .attr("dy", ".71em")
+          .attr("text-anchor", "middle")
+          .text(function(d) { return xAxisFormatter(d); });
+  },
+
+  draw: function() {
+    var x = this.x;
+    var y = this.y;
+    var area = d3.svg.area.radial()
+      .interpolate(this.options.interpolation)
+      .angle(function(d) {
+        return x(d.x); })
+      .innerRadius(function(d) {
+        return y(0); })
+      .outerRadius(function(d) {
+        return y(d.y); });
+
+    this.svg.selectAll(".series")
+      .data(this.data.series)
+      .enter()
+      .append("path")
+        .attr("class", "layer")
+        .attr("d", function(s) {
+          return area(s.data); })
+        .style("fill", function(s) { return s.style && s.style['fill'] ? s.style['fill'] : 'steelblue'; });
+  }
+});
+
+Recipe['geo'] = Recipe.extend({ //TODO incomplete! need to wait until d3.v3 api is finalized.
   defaultOptions: {
     "projection": "mercator",
     "origin": [0, 0],
