@@ -1,4 +1,4 @@
-/*! D3Cookbook - v0.1.0 - 2012-12-06
+/*! D3Cookbook - v0.1.0 - 2012-12-07
 * https://github.com/clayzermk1/D3Cookbook
 * Copyright (c) 2012 ; Licensed  */
 
@@ -155,8 +155,8 @@ Recipe['_cartesian'] = Recipe.extend({
     width: 500,
     xKey: "x",
     yKey: "y",
-    xFormatter: function(d) { return +d; },
-    yFormatter: function(d) { return +d; },
+    xFormatter: function(d) { return d; },
+    yFormatter: function(d) { return d; },
     xScale: d3.scale.linear,
     yScale: d3.scale.linear,
     xAxisLabel: "",
@@ -176,11 +176,6 @@ Recipe['_cartesian'] = Recipe.extend({
 
   init: function(data, options){
     this._super(data, options);
-
-//    _.each(this.data, function(d) {
-//        d[this.options.xKey] = this.options.xFormatter(d[this.options.xKey]);
-//        d[this.options.yKey] = this.options.yFormatter(d[this.options.yKey]);
-//    }, this);
 
     this.svg.attr("transform", "translate(" + this.options.margin.left + "," + this.options.margin.top + ")");
 
@@ -216,8 +211,15 @@ Recipe['_cartesian'] = Recipe.extend({
 
     this.y = this.options.yScale()
       .domain(d3.extent(this.data, function(d) { return d[yKey]; }))
-      .range([this.options.height, 0]);
-//      .nice();
+      .range([this.options.height, 0])
+      .nice();
+  },
+
+  updateScales: function() {
+    var xKey = this.options.xKey;
+    var yKey = this.options.yKey;
+    this.x.domain(d3.extent(this.data, function(d) { return d[xKey]; }));
+    this.y.domain(d3.extent(this.data, function(d) { return d[yKey]; }));
   },
 
   createAxes: function() {
@@ -240,26 +242,30 @@ Recipe['_cartesian'] = Recipe.extend({
       .attr("transform", "translate(0," + this.options.height + ")")
       .call(this.xAxis)
       .append("text")
-        .attr("x", this.options.width - 10)
-        .attr("y", -6)
+        .attr("x", this.options.width / 2)
+        .attr("y", (this.options.margin.bottom - 10))
         .attr("dx", ".71em")
-        .style("text-anchor", "end")
+        .style("text-anchor", "middle")
         .text(this.options.xAxisLabel);
 
     this.svg.append("g")
       .attr("class", "y axis")
       .call(this.yAxis)
       .append("text")
-        .attr("transform", "rotate(90)")
-        .attr("y", -18)
+        .attr("transform", "rotate(-90)")
+        .attr("x", -this.options.height / 2)
+        .attr("y", -(this.options.margin.left - 10))
         .attr("dy", ".71em")
-        .style("text-anchor", "beginning")
+        .style("text-anchor", "middle")
         .text(this.options.yAxisLabel);
 
     d3.selectAll('.axis path, .axis line')
       .style("fill", "none")
       .style("stroke", "black")
       .style("shape-rendering", "crispEdges");
+
+    d3.selectAll('.axis text')
+      .style("font-size", "10px");
   },
 
   update: function(data) {
@@ -267,10 +273,7 @@ Recipe['_cartesian'] = Recipe.extend({
     this.parseData(data);
 
     // Update the scale domains.
-    var xKey = this.options.xKey;
-    var yKey = this.options.yKey;
-    this.x.domain(d3.extent(this.data, function(d) { return d[xKey]; }));
-    this.y.domain(d3.extent(this.data, function(d) { return d[yKey]; }));
+    this.updateScales();
 
     // Redraw the graph.
     this.drawGraph();
@@ -365,52 +368,105 @@ Recipe['area'] = Recipe['_cartesian'].extend({
 
 Recipe['bar'] = Recipe['_cartesian'].extend({ //TODO need to migrate to new cartesian model!
   defaultOptions: {
-    xAxisFormatter: function(d) { return d; },
-    yAxisFormatter: d3.format(".0%"),
+    margin: {top: 50, right: 50, bottom: 50, left: 50},
+    height: 500,
+    width: 500,
+    xKey: "x",
+    yKey: "y",
     xFormatter: function(d) { return d; },
-    yFormatter: function(d) { return +d; }
+    yFormatter: function(d) { return d; },
+    xScale: d3.scale.ordinal,
+    yScale: d3.scale.linear,
+    xAxisLabel: "",
+    yAxisLabel: "",
+    xAxisFormatter: function(d) { return d; },
+    yAxisFormatter: function(d) { return d; },
+    seriesKey: "",
+    colors: d3.scale.category10()
   },
+
+  bar: null,
 
   createScales: function() {
-    this.x = d3.scale.ordinal()
-      .domain(
-        _.chain(this.data.series)
-          .reduce(function(m, d) {
-            return m.concat(d.data);
-          }, [])
-          .pluck("x")
-          .uniq()
-          .sortBy("value")
-          .value()
-      )
+    var xKey = this.options.xKey;
+    var yKey = this.options.yKey;
+
+    this.x = this.options.xScale()
+      .domain(_.chain(this.data).pluck(xKey).uniq().value())
       .rangeRoundBands([0, this.options.width], 0.1);
 
-    this.y = d3.scale.linear()
-      .domain([0, d3.max(this.data, function(d) { return d; })]) //TODO check this.
-      .range([this.options.height, 0]);
+    this.y = this.options.yScale()
+      .domain(d3.extent(_.chain(this.data).pluck(yKey).uniq().value(), function(d) { return d; }))
+      .range([this.options.height, 0])
+      .nice();
   },
 
-  draw: function() {
+  updateScales: function() {
+    var xKey = this.options.xKey;
+    var yKey = this.options.yKey;
+    this.x.domain(_.chain(this.data).pluck(xKey).uniq().value());
+    this.y.domain(d3.extent(_.chain(this.data).pluck(yKey).uniq().value(), function(d) { return d; }));
+  },
+
+  createGraph: function() {
+    this.series = this.svg.selectAll(".series")
+      .data(this.nest);
+
+    this.series
+      .enter()
+      .append("g")
+        .attr("id", function(s) { return s.key; })
+        .attr("class", "series");
+
+    this.series.exit().remove();
+
+    this.bar = this.series.selectAll(".bar")
+      .data(function(s) { return s.values; });
+
+    var bar = this.bar
+      .enter()
+      .append("g")
+        .attr("class", "bar");
+
+    bar.append("rect");
+    bar.append("text");
+
+    this.bar.exit().remove();
+
+    this.drawGraph();
+  },
+
+  drawGraph: function() {
     var x = this.x;
     var y = this.y;
+    var xKey = this.options.xKey;
+    var yKey = this.options.yKey;
+    var seriesKey = this.options.seriesKey;
+    var colors = this.options.colors;
     var height = this.options.height;
+    var yAxisFormatter = this.options.yAxisFormatter;
 
-    _.each(this.data.series, function(s) {
-      this.svg
-        .append("g")
-        .attr("id", s.label)
-        .attr("class", "series")
-        .selectAll(".bar")
-        .data(s.data)
-        .enter()
-        .append("rect")
-          .attr("class", "bar")
-          .attr("x", function(d) { return x(d.x); })
-          .attr("width", x.rangeBand())
-          .attr("y", function(d) { return y(d.y); })
-          .attr("height", function(d) { return height - y(d.y); })
-          .style("fill", s.style && s.style['fill'] ? s.style['fill'] : 'steelblue');
-    }, this);
+    this.series.data(this.nest);
+
+    this.bar.data(function(s) { return s.values; });
+
+    this.bar.selectAll("rect")
+      .attr("x", function(d) { return x(d[xKey]); })
+      .attr("y", function(d) { return y(d[yKey]); })
+      .attr("width", x.rangeBand())
+      .attr("height", function(d) { return height - y(d[yKey]); })
+      .style("fill", function(d) { return colors(d[seriesKey]); })
+      .style("fill-opacity", 0.5)
+      .style("stroke", function(d) { return colors(d[seriesKey]); })
+      .style("stroke-width", '1.5px');
+
+    this.bar.selectAll("text")
+      .attr("x", function(d) { return x(d[xKey]) + (x.rangeBand() / 2); })
+      .attr("y", function(d) { return y(d[yKey]) + 12; })
+      .attr("text-anchor", "middle")
+      .text(function(d) { return yAxisFormatter(d[yKey]); })
+      .style("fill", "#fff")
+      .style("font-size", "10px");
   }
 });
 

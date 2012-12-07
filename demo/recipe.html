@@ -29,10 +29,39 @@
     <script type="text/javascript">
       var recipe;
       var initData, newData;
+      var randomLetters = [
+  {"letter": "A", "frequency": Math.random()},
+  {"letter": "B", "frequency": Math.random()},
+  {"letter": "C", "frequency": Math.random()},
+  {"letter": "D", "frequency": Math.random()},
+  {"letter": "E", "frequency": Math.random()},
+  {"letter": "F", "frequency": Math.random()},
+  {"letter": "G", "frequency": Math.random()},
+  {"letter": "H", "frequency": Math.random()},
+  {"letter": "I", "frequency": Math.random()},
+  {"letter": "J", "frequency": Math.random()},
+  {"letter": "K", "frequency": Math.random()},
+  {"letter": "L", "frequency": Math.random()},
+  {"letter": "M", "frequency": Math.random()},
+  {"letter": "N", "frequency": Math.random()},
+  {"letter": "O", "frequency": Math.random()},
+  {"letter": "P", "frequency": Math.random()},
+  {"letter": "Q", "frequency": Math.random()},
+  {"letter": "R", "frequency": Math.random()},
+  {"letter": "S", "frequency": Math.random()},
+  {"letter": "T", "frequency": Math.random()},
+  {"letter": "U", "frequency": Math.random()},
+  {"letter": "V", "frequency": Math.random()},
+  {"letter": "W", "frequency": Math.random()},
+  {"letter": "X", "frequency": Math.random()},
+  {"letter": "Y", "frequency": Math.random()},
+  {"letter": "Z", "frequency": Math.random()}
+];
       $(document).on('ready', function() {
         // Create our recipe.
         var options = {
           "selector": ".recipe",
+          "margin": {"left": 100, "top": 50, "right": 50, "bottom": 100},
           //HEATMAP
 //          "recipe": "heatmap",
 //          "xKey": "timestamp",
@@ -47,20 +76,30 @@
 //          "xAxisFormatter": d3.time.format("%H"),
 //          "yAxisFormatter": d3.time.format("%a")
           //LINE & AREA
-          "recipe": "area",
-          "xKey": "date",
-          "yKey": "close",
-          "xFormatter": d3.time.format("%d-%b-%y").parse,
-          "xScale": d3.time.scale,
-          "xAxisLabel": "Date",
-          "yAxisLabel": "Price ($)",
-          "xAxisFormatter": d3.time.format("%x")
+//          "recipe": "area",
+//          "xKey": "date",
+//          "yKey": "close",
+//          "xFormatter": d3.time.format("%d-%b-%y").parse,
+//          "xScale": d3.time.scale,
+//          "xAxisLabel": "Date",
+//          "yAxisLabel": "Price ($)",
+//          "xAxisFormatter": d3.time.format("%x")
+          //BAR
+          "recipe": "bar",
+          "xKey": "letter",
+          "yKey": "frequency",
+          "yFormatter": function(d) { return +d; },
+          "xAxisLabel": "Letter",
+          "yAxisLabel": "Frequency",
+//          "yAxisFormatter": function(d) { return d3.round(d / 1000000, 2) + "M"; }
+          "yAxisFormatter": function(d) { return d3.round(d, 2); },
+          "width": 960
         };
 //        d3.csv("./data/time_vs_avgcpubusy.csv", function(error, json) {
-        d3.json('./data/stocks.json', function(error, json) {
-          initData = json.slice(0, 19);
-          newData = json.slice(0, 39);
-          recipe = new Recipe[options.recipe](initData, options);
+        d3.json('./data/letter_frequency.json', function(error, json) {
+//          initData = json.slice(0, 19);
+//          newData = json.slice(0, 39);
+          recipe = new Recipe[options.recipe](randomLetters, options);
         });
       });
     </script>
