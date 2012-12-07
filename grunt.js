@@ -32,7 +32,8 @@ module.exports = function(grunt) {
           '<file_strip_banner:lib/Recipe.bar.js>',
           '<file_strip_banner:lib/Recipe.scatter.js>',
           '<file_strip_banner:lib/Recipe.spider.js>',
-          '<file_strip_banner:lib/Recipe.geo.js>'
+          '<file_strip_banner:lib/Recipe.geo.js>',
+          '<file_strip_banner:lib/Recipe.heatmap.js>'
         ],
         dest: 'dist/<%= pkg.name %>.js'
       }
