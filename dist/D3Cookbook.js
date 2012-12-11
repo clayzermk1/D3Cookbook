@@ -1,4 +1,4 @@
-/*! D3Cookbook - v0.1.0 - 2012-12-10
+/*! D3Cookbook - v0.1.0 - 2012-12-11
 * https://github.com/clayzermk1/D3Cookbook
 * Copyright (c) 2012 ; Licensed  */
 
@@ -180,7 +180,7 @@ Recipe['_cartesian'] = Recipe.extend({
     this.svg.attr("transform", "translate(" + this.options.margin.left + "," + this.options.margin.top + ")");
 
     this.createScales();
-    this.createGraph();
+    this.drawGraph();
     this.createAxes();
 
     return this;
@@ -218,8 +218,9 @@ Recipe['_cartesian'] = Recipe.extend({
   updateScales: function() {
     var xKey = this.options.xKey;
     var yKey = this.options.yKey;
+
     this.x.domain(d3.extent(this.data, function(d) { return d[xKey]; }));
-    this.y.domain(d3.extent(this.data, function(d) { return d[yKey]; }));
+    this.y.domain(d3.extent(this.data, function(d) { return d[yKey]; })).nice();
   },
 
   createAxes: function() {
@@ -285,7 +286,14 @@ Recipe['_cartesian'] = Recipe.extend({
 });
 
 Recipe['line'] = Recipe['_cartesian'].extend({
-  createGraph: function() {
+  drawGraph: function() {
+    var x = this.x;
+    var y = this.y;
+    var xKey = this.options.xKey;
+    var yKey = this.options.yKey;
+    var seriesKey = this.options.seriesKey;
+    var colors = this.options.colors;
+
     this.series = this.svg.selectAll(".series")
       .data(this.nest);
 
@@ -297,17 +305,6 @@ Recipe['line'] = Recipe['_cartesian'].extend({
         .append("path");
 
     this.series.exit().remove();
-
-    this.drawGraph();
-  },
-
-  drawGraph: function() {
-    var x = this.x;
-    var y = this.y;
-    var xKey = this.options.xKey;
-    var yKey = this.options.yKey;
-    var seriesKey = this.options.seriesKey;
-    var colors = this.options.colors;
 
     this.series
       .data(this.nest)
@@ -325,7 +322,14 @@ Recipe['line'] = Recipe['_cartesian'].extend({
 });
 
 Recipe['area'] = Recipe['_cartesian'].extend({
-  createGraph: function() {
+  drawGraph: function() {
+    var x = this.x;
+    var y = this.y;
+    var xKey = this.options.xKey;
+    var yKey = this.options.yKey;
+    var seriesKey = this.options.seriesKey;
+    var colors = this.options.colors;
+
     this.series = this.svg.selectAll(".series")
       .data(this.nest);
 
@@ -337,17 +341,6 @@ Recipe['area'] = Recipe['_cartesian'].extend({
         .append("path");
 
     this.series.exit().remove();
-
-    this.drawGraph();
-  },
-
-  drawGraph: function() {
-    var x = this.x;
-    var y = this.y;
-    var xKey = this.options.xKey;
-    var yKey = this.options.yKey;
-    var seriesKey = this.options.seriesKey;
-    var colors = this.options.colors;
 
     this.series
       .data(this.nest)
@@ -400,7 +393,7 @@ Recipe['bar'] = Recipe.extend({
     this.svg.attr("transform", "translate(" + this.options.margin.left + "," + this.options.margin.top + ")");
 
     this.createScales();
-    this.createGraph();
+    this.drawGraph();
     this.createAxes();
 
     return this;
@@ -498,7 +491,17 @@ Recipe['bar'] = Recipe.extend({
       .style("font-size", "10px");
   },
 
-  createGraph: function() {
+  drawGraph: function() {
+    var x = this.x;
+    var x1 = this.x1;
+    var y = this.y;
+    var xKey = this.options.xKey;
+    var yKey = this.options.yKey;
+    var seriesKey = this.options.seriesKey;
+    var colors = this.options.colors;
+    var height = this.options.height;
+    var yAxisFormatter = this.options.yAxisFormatter;
+
     this.groups = this.svg.selectAll(".group")
       .data(this.nest);
 
@@ -517,32 +520,13 @@ Recipe['bar'] = Recipe.extend({
       .enter()
       .append("g")
         .attr("id", function(s) { return s.key; })
-        .attr("class", "bar");
+        .attr("class", "bar")
+        .attr("transform", function(d) { return "translate(" + x(d.values[0][xKey]) + ", 0)"; });
 
     bars.append("rect");
     bars.append("text");
 
     this.bars.exit().remove();
-
-    this.drawGraph();
-  },
-
-  drawGraph: function() {
-    var x = this.x;
-    var x1 = this.x1;
-    var y = this.y;
-    var xKey = this.options.xKey;
-    var yKey = this.options.yKey;
-    var seriesKey = this.options.seriesKey;
-    var colors = this.options.colors;
-    var height = this.options.height;
-    var yAxisFormatter = this.options.yAxisFormatter;
-
-    this.groups.data(this.nest);
-
-    this.bars
-      .data(function(g) { return g.values; })
-      .attr("transform", function(d) { return "translate(" + x(d.values[0][xKey]) + ", 0)"; });
 
     this.bars.selectAll("rect")
       .datum(function() {
@@ -593,9 +577,9 @@ Recipe['scatter'] = Recipe['_cartesian'].extend({ //TODO incomplete! need update
     xKey: "x",
     yKey: "y",
     rKey: "",
-    xFormatter: function(d) { return +d; },
-    yFormatter: function(d) { return +d; },
-    rFormatter: function(d) { return +d; },
+    xFormatter: function(d) { return d; },
+    yFormatter: function(d) { return d; },
+    rFormatter: function(d) { return d; },
     xScale: d3.scale.linear,
     yScale: d3.scale.linear,
     xAxisLabel: "",
@@ -603,58 +587,9 @@ Recipe['scatter'] = Recipe['_cartesian'].extend({ //TODO incomplete! need update
     rAxisLabel: "",
     xAxisFormatter: function(d) { return d; },
     yAxisFormatter: function(d) { return d; },
+    rAxisFormatter: function(d) { return d; },
     seriesKey: "",
     colors: d3.scale.category10()
-  },
-
-  draw: function() {
-    var x = this.x;
-    var y = this.y;
-    var xKey = this.options.xKey;
-    var yKey = this.options.yKey;
-    var rKey = this.options.rKey;
-    var rFormatter = this.options.rFormatter;
-    var seriesKey = this.options.seriesKey;
-    var colors = this.options.colors;
-
-//    this.svg.selectAll(".dot")
-//        .data(this.data)
-//        .enter()
-//        .append("circle")
-//          .attr("class", "dot " + function(d) { return d[seriesKey]; })
-//          .attr("r", function(d) { return rFormatter(d[rKey] ? d[rKey] : 1); })
-//          .attr("cx", function(d) { return x(d[xKey]); })
-//          .attr("cy", function(d) { return y(d[yKey]); })
-//          .style("fill", function(d) { return colors(d[seriesKey]); });
-    var series = this.svg.selectAll(".series")
-      .data(this.nest);
-
-    series
-      .enter()
-      .append("g")
-        .attr("id", function(s) { return s.key; })
-        .attr("class", "series");
-
-    var dot = series.selectAll("dot")
-          .data(function(s) {
-              return s.values; });
-        dot
-          .enter()
-          .append("circle")
-            .attr("class", "dot");
-
-            dot
-            .attr("r", function(d) {
-              return rFormatter(d[rKey] ? d[rKey] : 1); })
-            .attr("cx", function(d) {
-              return x(d[xKey]); })
-            .attr("cy", function(d) {
-              return y(d[yKey]); })
-            .style("fill", function(d) {
-              return colors(d[seriesKey]); });
-
-              dot.exit().remove();
-              series.exit().remove();
   },
 
   drawAxes: function() {
@@ -671,6 +606,49 @@ Recipe['scatter'] = Recipe['_cartesian'].extend({ //TODO incomplete! need update
     }
 
     this._super();
+  },
+
+  drawGraph: function() {
+    var x = this.x;
+    var y = this.y;
+    var xKey = this.options.xKey;
+    var yKey = this.options.yKey;
+    var rKey = this.options.rKey;
+    var rFormatter = this.options.rFormatter;
+    var seriesKey = this.options.seriesKey;
+    var colors = this.options.colors;
+
+    this.series = this.svg.selectAll(".series")
+      .data(this.nest);
+
+    this.series
+      .enter()
+      .append("g")
+        .attr("id", function(s) { return s.key; })
+        .attr("class", "series");
+
+    this.series.exit().remove();
+
+    var dot = this.series.selectAll(".dot")
+      .data(function(s) {
+        return s.values; });
+
+    dot
+      .enter()
+      .append("circle")
+        .attr("class", "dot");
+
+    dot.exit().remove();
+
+    this.series.selectAll(".dot")
+      .data(function(s) { return s.values; })
+      .attr("r", function(d) { return rFormatter(d[rKey] ? d[rKey] : 1); })
+      .attr("cx", function(d) { return x(d[xKey]); })
+      .attr("cy", function(d) { return y(d[yKey]); })
+      .style("fill", function(d) { return colors(d[seriesKey]); })
+      .style("fill-opacity", 0.5)
+      .style("stroke", function(d) { return colors(d[seriesKey]); })
+      .style("stroke-width", '1.5px');
   }
 });
 
