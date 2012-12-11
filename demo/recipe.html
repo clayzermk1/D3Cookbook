@@ -28,96 +28,84 @@
     <script type="text/javascript" src="../dist/D3Cookbook.js"></script>
     <script type="text/javascript">
       var recipe;
-//      var barData = [
-//  {"series": "a", "letter": "A", "frequency": Math.random()},
-//  {"series": "a", "letter": "B", "frequency": Math.random()},
-//  {"series": "a", "letter": "C", "frequency": Math.random()},
-//  {"series": "a", "letter": "D", "frequency": Math.random()},
-//  {"series": "a", "letter": "E", "frequency": Math.random()},
-//  {"series": "a", "letter": "F", "frequency": Math.random()},
-//  {"series": "a", "letter": "G", "frequency": Math.random()},
-//  {"series": "a", "letter": "H", "frequency": Math.random()},
-//  {"series": "a", "letter": "I", "frequency": Math.random()},
-//  {"series": "a", "letter": "J", "frequency": Math.random()},
-//  {"series": "a", "letter": "K", "frequency": Math.random()},
-//  {"series": "a", "letter": "L", "frequency": Math.random()},
-//  {"series": "a", "letter": "M", "frequency": Math.random()},
-//  {"series": "a", "letter": "N", "frequency": Math.random()},
-//  {"series": "a", "letter": "O", "frequency": Math.random()},
-//  {"series": "a", "letter": "P", "frequency": Math.random()},
-//  {"series": "a", "letter": "Q", "frequency": Math.random()},
-//  {"series": "a", "letter": "R", "frequency": Math.random()},
-//  {"series": "a", "letter": "S", "frequency": Math.random()},
-//  {"series": "a", "letter": "T", "frequency": Math.random()},
-//  {"series": "a", "letter": "U", "frequency": Math.random()},
-//  {"series": "a", "letter": "V", "frequency": Math.random()},
-//  {"series": "a", "letter": "W", "frequency": Math.random()},
-//  {"series": "a", "letter": "X", "frequency": Math.random()},
-//  {"series": "a", "letter": "Y", "frequency": Math.random()},
-//  {"series": "a", "letter": "Z", "frequency": Math.random()},
-//  {"series": "b", "letter": "A", "frequency": Math.random()},
-//  {"series": "b", "letter": "B", "frequency": Math.random()},
-//  {"series": "b", "letter": "C", "frequency": Math.random()},
-//  {"series": "b", "letter": "D", "frequency": Math.random()},
-//  {"series": "b", "letter": "E", "frequency": Math.random()},
-//  {"series": "b", "letter": "F", "frequency": Math.random()},
-//  {"series": "b", "letter": "G", "frequency": Math.random()},
-//  {"series": "b", "letter": "H", "frequency": Math.random()},
-//  {"series": "b", "letter": "I", "frequency": Math.random()},
-//  {"series": "b", "letter": "J", "frequency": Math.random()},
-//  {"series": "b", "letter": "K", "frequency": Math.random()},
-//  {"series": "b", "letter": "L", "frequency": Math.random()},
-//  {"series": "b", "letter": "M", "frequency": Math.random()},
-//  {"series": "b", "letter": "N", "frequency": Math.random()},
-//  {"series": "b", "letter": "O", "frequency": Math.random()},
-//  {"series": "b", "letter": "P", "frequency": Math.random()},
-//  {"series": "b", "letter": "Q", "frequency": Math.random()},
-//  {"series": "b", "letter": "R", "frequency": Math.random()},
-//  {"series": "b", "letter": "S", "frequency": Math.random()},
-//  {"series": "b", "letter": "T", "frequency": Math.random()},
-//  {"series": "b", "letter": "U", "frequency": Math.random()},
-//  {"series": "b", "letter": "V", "frequency": Math.random()},
-//  {"series": "b", "letter": "W", "frequency": Math.random()},
-//  {"series": "b", "letter": "X", "frequency": Math.random()},
-//  {"series": "b", "letter": "Y", "frequency": Math.random()},
-//  {"series": "b", "letter": "Z", "frequency": Math.random()}
-//];
-  var scatterData = [
-    {"sepalLength": Math.random() * 10.0, "sepalWidth": Math.random() + 3.0, "petalLength": Math.random() * 10.0, "petalWidth": Math.random() + 1, "species": "randomcolor"},
-    {"sepalLength": Math.random() * 10.0, "sepalWidth": Math.random() + 3.0, "petalLength": Math.random() * 10.0, "petalWidth": Math.random() + 1, "species": "randomcolor"},
-    {"sepalLength": Math.random() * 10.0, "sepalWidth": Math.random() + 3.0, "petalLength": Math.random() * 10.0, "petalWidth": Math.random() + 1, "species": "randomcolor"},
-    {"sepalLength": Math.random() * 10.0, "sepalWidth": Math.random() + 3.0, "petalLength": Math.random() * 10.0, "petalWidth": Math.random() + 1, "species": "randomcolor"},
-    {"sepalLength": Math.random() * 10.0, "sepalWidth": Math.random() + 3.0, "petalLength": Math.random() * 10.0, "petalWidth": Math.random() + 1, "species": "randomcolor"},
-    {"sepalLength": Math.random() * 10.0, "sepalWidth": Math.random() + 3.0, "petalLength": Math.random() * 10.0, "petalWidth": Math.random() + 1, "species": "randomcolor"}
-  ];
+      var barData = [
+        {"series": "a", "letter": "A", "frequency": Math.random()},
+        {"series": "a", "letter": "B", "frequency": Math.random()},
+        {"series": "a", "letter": "C", "frequency": Math.random()},
+        {"series": "a", "letter": "D", "frequency": Math.random()},
+        {"series": "a", "letter": "E", "frequency": Math.random()},
+        {"series": "a", "letter": "F", "frequency": Math.random()},
+        {"series": "a", "letter": "G", "frequency": Math.random()},
+        {"series": "a", "letter": "H", "frequency": Math.random()},
+        {"series": "a", "letter": "I", "frequency": Math.random()},
+        {"series": "a", "letter": "J", "frequency": Math.random()},
+        {"series": "a", "letter": "K", "frequency": Math.random()},
+        {"series": "a", "letter": "L", "frequency": Math.random()},
+        {"series": "a", "letter": "M", "frequency": Math.random()},
+        {"series": "a", "letter": "N", "frequency": Math.random()},
+        {"series": "a", "letter": "O", "frequency": Math.random()},
+        {"series": "a", "letter": "P", "frequency": Math.random()},
+        {"series": "a", "letter": "Q", "frequency": Math.random()},
+        {"series": "a", "letter": "R", "frequency": Math.random()},
+        {"series": "a", "letter": "S", "frequency": Math.random()},
+        {"series": "a", "letter": "T", "frequency": Math.random()},
+        {"series": "a", "letter": "U", "frequency": Math.random()},
+        {"series": "a", "letter": "V", "frequency": Math.random()},
+        {"series": "a", "letter": "W", "frequency": Math.random()},
+        {"series": "a", "letter": "X", "frequency": Math.random()},
+        {"series": "a", "letter": "Y", "frequency": Math.random()},
+        {"series": "a", "letter": "Z", "frequency": Math.random()},
+        {"series": "b", "letter": "A", "frequency": Math.random()},
+        {"series": "b", "letter": "B", "frequency": Math.random()},
+        {"series": "b", "letter": "C", "frequency": Math.random()},
+        {"series": "b", "letter": "D", "frequency": Math.random()},
+        {"series": "b", "letter": "E", "frequency": Math.random()},
+        {"series": "b", "letter": "F", "frequency": Math.random()},
+        {"series": "b", "letter": "G", "frequency": Math.random()},
+        {"series": "b", "letter": "H", "frequency": Math.random()},
+        {"series": "b", "letter": "I", "frequency": Math.random()},
+        {"series": "b", "letter": "J", "frequency": Math.random()},
+        {"series": "b", "letter": "K", "frequency": Math.random()},
+        {"series": "b", "letter": "L", "frequency": Math.random()},
+        {"series": "b", "letter": "M", "frequency": Math.random()},
+        {"series": "b", "letter": "N", "frequency": Math.random()},
+        {"series": "b", "letter": "O", "frequency": Math.random()},
+        {"series": "b", "letter": "P", "frequency": Math.random()},
+        {"series": "b", "letter": "Q", "frequency": Math.random()},
+        {"series": "b", "letter": "R", "frequency": Math.random()},
+        {"series": "b", "letter": "S", "frequency": Math.random()},
+        {"series": "b", "letter": "T", "frequency": Math.random()},
+        {"series": "b", "letter": "U", "frequency": Math.random()},
+        {"series": "b", "letter": "V", "frequency": Math.random()},
+        {"series": "b", "letter": "W", "frequency": Math.random()},
+        {"series": "b", "letter": "X", "frequency": Math.random()},
+        {"series": "b", "letter": "Y", "frequency": Math.random()},
+        {"series": "b", "letter": "Z", "frequency": Math.random()}
+      ];
+      var scatterData = [
+        {"sepalLength": Math.random() * 10.0, "sepalWidth": Math.random() + 3.0, "petalLength": Math.random() * 10.0, "petalWidth": Math.random() + 1, "species": "randomcolor"},
+        {"sepalLength": Math.random() * 10.0, "sepalWidth": Math.random() + 3.0, "petalLength": Math.random() * 10.0, "petalWidth": Math.random() + 1, "species": "randomcolor"},
+        {"sepalLength": Math.random() * 10.0, "sepalWidth": Math.random() + 3.0, "petalLength": Math.random() * 10.0, "petalWidth": Math.random() + 1, "species": "randomcolor"},
+        {"sepalLength": Math.random() * 10.0, "sepalWidth": Math.random() + 3.0, "petalLength": Math.random() * 10.0, "petalWidth": Math.random() + 1, "species": "randomcolor"},
+        {"sepalLength": Math.random() * 10.0, "sepalWidth": Math.random() + 3.0, "petalLength": Math.random() * 10.0, "petalWidth": Math.random() + 1, "species": "randomcolor"},
+        {"sepalLength": Math.random() * 10.0, "sepalWidth": Math.random() + 3.0, "petalLength": Math.random() * 10.0, "petalWidth": Math.random() + 1, "species": "randomcolor"}
+      ];
       $(document).on('ready', function() {
         // Create our recipe.
         var options = {
           "selector": ".recipe",
           "margin": {"left": 100, "top": 50, "right": 50, "bottom": 100},
-          //HEATMAP
-//          "recipe": "heatmap",
-//          "xKey": "timestamp",
-//          "yKey": "timestamp",
-//          "rKey": "avgcpubusy",
-//          "xFormatter": d3.time.format("%m/%d/%Y %X").parse,
+          //LINE & AREA - stocks.json
+//          "recipe": "line",
+//          "xKey": "date",
+//          "yKey": "close",
+//          "seriesKey": "series",
+//          "xFormatter": d3.time.format("%d-%b-%y").parse,
 //          "xScale": d3.time.scale,
-//          "rFormatter": function(d) { return +d; },
-//          "xAxisLabel": "Hour",
-//          "yAxisLabel": "Day of Week",
-//          "rAxisLabel": "Avg. CPU Busy",
-//          "xAxisFormatter": d3.time.format("%H"),
-//          "yAxisFormatter": d3.time.format("%a")
-          //LINE & AREA
-          "recipe": "line",
-          "xKey": "date",
-          "yKey": "close",
-          "xFormatter": d3.time.format("%d-%b-%y").parse,
-          "xScale": d3.time.scale,
-          "xAxisLabel": "Date",
-          "yAxisLabel": "Price ($)",
-          "xAxisFormatter": d3.time.format("%x")
-          //BAR
+//          "xAxisLabel": "Date",
+//          "yAxisLabel": "Price ($)",
+//          "xAxisFormatter": d3.time.format("%x")
+          //BAR - letter_frequency.json
 //          "recipe": "bar",
 //          "xKey": "letter",
 //          "yKey": "frequency",
@@ -127,7 +115,7 @@
 //          "yAxisFormatter": function(d) { return d3.round(d, 2); },
 //          "width": 1200,
 //          "seriesKey": "series"
-          //SCATTER
+          //SCATTER - flowers.json
 //          "recipe": "scatter",
 //          "xKey": "sepalWidth",
 //          "yKey": "sepalLength",
@@ -137,11 +125,26 @@
 //          "yAxisLabel": "Sepal Lenght",
 //          "rAxisLabel": "Point radius indicates Petal Length",
 //          "xAxisFormatter": function(d) { return d3.round(d, 2); }
+          //PIE & DONUT - population.json
+//          "recipe": "donut",
+//          "labelKey": "age",
+//          "valueKey": "population"
+          //HEATMAP - timee_vs_avgcpubusy.csv
+          "recipe": "heatmap",
+          "xKey": "timestamp",
+          "yKey": "timestamp",
+          "rKey": "avgcpubusy",
+          "xFormatter": d3.time.format("%m/%d/%Y %X").parse,
+          "xScale": d3.time.scale,
+          "rFormatter": function(d) { return +d; },
+          "xAxisLabel": "Hour",
+          "yAxisLabel": "Day of Week",
+          "rAxisLabel": "Avg. CPU Busy",
+          "xAxisFormatter": d3.time.format("%H"),
+          "yAxisFormatter": d3.time.format("%a")
         };
-//        d3.csv("./data/time_vs_avgcpubusy.csv", function(error, json) {
-        d3.json('./data/stocks.json', function(error, json) {
-//          initData = json.slice(0, 19);
-//          newData = json.slice(0, 39);
+        d3.csv("./data/time_vs_avgcpubusy.csv", function(error, json) {
+//        d3.json('./data/population.json', function(error, json) {
           recipe = new Recipe[options.recipe](json, options);
         });
       });

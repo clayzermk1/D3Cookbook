@@ -92,59 +92,101 @@ var Recipe = Class.extend({
   }
 });
 
-Recipe['pie'] = Recipe.extend({ //TODO incomplete! needs dynamic data testing, changes to cartesian merged in.
+Recipe['pie'] = Recipe.extend({
   defaultOptions: {
+    margin: {top: 50, right: 50, bottom: 50, left: 50},
+    height: 500,
+    width: 500,
     r: 250,
     rh: 0,
-    pathStroke: "#fff",
-    valueFormatter: function(v) { return +v; }
+    labelKey: "label",
+    valueKey: "value",
+    labelFormatter: function(d) { return d; },
+    valueFormatter: function(d) { return d; },
+    colors: d3.scale.category10()
   },
 
-  init: function(recipe){
-    this.options = _.defaults(recipe.options, this.defaultOptions);
-    this.svg = recipe.svg.attr("transform", "translate(" + ( (this.options.width / 2) + this.options.margin.left ) + "," + ( (this.options.height / 2) + this.options.margin.top ) + ")");
-    this.update(recipe.data);
+  init: function(data, options){
+    this._super(data, options);
+
+    this.svg.attr("transform", "translate(" + ( (this.options.width / 2) + this.options.margin.left ) + "," + ( (this.options.height / 2) + this.options.margin.top ) + ")");
+
+    this.drawGraph();
+
     return this;
   },
 
-  draw: function() {
+  parseData: function(data) {
+    this._super(data);
+
+    _.each(this.data, function(d) {
+        d[this.options.valueKey] = this.options.valueFormatter(d[this.options.valueKey]);
+    }, this);
+  },
+
+  drawGraph: function() {
+    var labelKey = this.options.labelKey;
+    var valueKey = this.options.valueKey;
+    var colors = this.options.colors;
+
     var arc = d3.svg.arc()
       .outerRadius(this.options.r)// - Math.max(this.options.margin.top, this.options.margin.right, this.options.margin.bottom, this.options.margin.left))
       .innerRadius(this.options.rh);
 
     var pie = d3.layout.pie()
       .sort(null)
-      .value(function(d) { return d.value; });
+      .value(function(d) { return d[valueKey]; });
 
-    this.data.forEach(function(d) {
-      d.value = this.options.valueFormatter(d.value);
-    }, this);
+    var value = this.svg.selectAll(".value")
+      .data(pie(this.data));
 
-    var g = this.svg.selectAll(".arc")
-      .data(pie(this.data))
+    var g = value
       .enter()
       .append("g")
-        .attr("class", "arc");
+        .attr("class", "value");
 
-    g.append("path")
+    g.append("path");
+    g.append("text");
+
+    value.exit().remove();
+
+    value
+      .attr("id", function(d) { return d.data[labelKey]; });
+
+    value.select("path")
       .attr("d", arc)
-      .style("fill", function(d) { return d.data.color; })
-      .style("stroke", this.options.pathStroke);
+      .style("fill", function(d) { return colors(d.data[labelKey]); })
+      .style("stroke", "#fff")
+      .style("stroke-width", '1.5px');
 
-    g.append("text")
+    value.select("text")
+      .text(function(d) { return d.data[labelKey]; })
       .attr("transform", function(d) { return "translate(" + arc.centroid(d) + ")"; })
       .attr("dy", ".35em")
-      .style("text-anchor", "middle")
-      .text(function(d) { return d.data.label; });
+      .style("text-anchor", "middle");
+  },
+
+  update: function(data) {
+    // Update the data.
+    this.parseData(data);
+
+    // Redraw the graph.
+    this.drawGraph();
   }
 });
 
 Recipe['donut'] = Recipe['pie'].extend({
   defaultOptions: {
+    margin: {top: 50, right: 50, bottom: 50, left: 50},
+    height: 500,
+    width: 500,
     r: 250,
     rh: 150,
-    pathStroke: "#fff",
-    valueFormatter: function(v) { return +v; }
+    labelKey: "label",
+    valueKey: "value",
+    labelFormatter: function(d) { return d; },
+    valueFormatter: function(d) { return d; },
+    colors: d3.scale.category10()
   }
 });
 
@@ -172,7 +214,6 @@ Recipe['_cartesian'] = Recipe.extend({
   y: null,
   xAxis: null,
   yAxis: null,
-  series: null,
 
   init: function(data, options){
     this._super(data, options);
@@ -294,30 +335,28 @@ Recipe['line'] = Recipe['_cartesian'].extend({
     var seriesKey = this.options.seriesKey;
     var colors = this.options.colors;
 
-    this.series = this.svg.selectAll(".series")
+    var series = this.svg.selectAll(".series")
       .data(this.nest);
 
-    this.series
+    series
       .enter()
       .append("g")
-        .attr("id", function(s) { return s.key; })
         .attr("class", "series")
         .append("path");
 
-    this.series.exit().remove();
+    series.exit().remove();
 
-    this.series
-      .data(this.nest)
-      .select("path")
-        .datum(function(s) {
-          return s.values;})
-        .attr("d", d3.svg.line()
-          .x(function(d) { return x(d[xKey]); })
-          .y(function(d) { return y(d[yKey]); })
-        )
-        .style("fill", 'none')
-        .style("stroke", function(d) { return colors(d[seriesKey]); })
-        .style("stroke-width", '1.5px');
+    series.attr("id", function(s) { return s.key; });
+
+    series.select("path")
+      .datum(function(s) { return s.values;})
+      .attr("d", d3.svg.line()
+        .x(function(d) { return x(d[xKey]); })
+        .y(function(d) { return y(d[yKey]); })
+      )
+      .style("fill", 'none')
+      .style("stroke", function(d) { return colors(d[0][seriesKey]); })
+      .style("stroke-width", '1px');
   }
 });
 
@@ -330,32 +369,30 @@ Recipe['area'] = Recipe['_cartesian'].extend({
     var seriesKey = this.options.seriesKey;
     var colors = this.options.colors;
 
-    this.series = this.svg.selectAll(".series")
+    var series = this.svg.selectAll(".series")
       .data(this.nest);
 
-    this.series
+    series
       .enter()
       .append("g")
-        .attr("id", function(s) { return s.key; })
         .attr("class", "series")
         .append("path");
 
-    this.series.exit().remove();
+    series.exit().remove();
 
-    this.series
-      .data(this.nest)
-      .select("path")
-        .datum(function(s) {
-          return s.values;})
-        .attr("d", d3.svg.area()
-          .x(function(d) { return x(d[xKey]); })
-          .y0(this.options.height)
-          .y1(function(d) { return y(d[yKey]); })
-        )
-        .style("fill", function(d) { return colors(d[seriesKey]); })
-        .style("fill-opacity", 0.5)
-        .style("stroke", function(d) { return colors(d[seriesKey]); })
-        .style("stroke-width", '1.5px');
+    series.attr("id", function(s) { return s.key; });
+
+    series.select("path")
+      .datum(function(s) { return s.values;})
+      .attr("d", d3.svg.area()
+        .x(function(d) { return x(d[xKey]); })
+        .y0(this.options.height)
+        .y1(function(d) { return y(d[yKey]); })
+      )
+      .style("fill", function(d) { return colors(d[0][seriesKey]); })
+      .style("fill-opacity", 0.5)
+      .style("stroke", function(d) { return colors(d[0][seriesKey]); })
+      .style("stroke-width", '1px');
   }
 });
 
@@ -384,8 +421,6 @@ Recipe['bar'] = Recipe.extend({
   y: null,
   xAxis: null,
   yAxis: null,
-  bars: null,
-  groups: null,
 
   init: function(data, options){
     this._super(data, options);
@@ -502,53 +537,52 @@ Recipe['bar'] = Recipe.extend({
     var height = this.options.height;
     var yAxisFormatter = this.options.yAxisFormatter;
 
-    this.groups = this.svg.selectAll(".group")
+    var groups = this.svg.selectAll(".group")
       .data(this.nest);
 
-    this.groups
+    groups
       .enter()
       .append("g")
         .attr("id", function(g) { return g.key; })
         .attr("class", "group");
 
-    this.groups.exit().remove();
+    groups.exit().remove();
 
-    this.bars = this.groups.selectAll(".bar")
+    var bars = groups.selectAll(".bar")
       .data(function(g) { return g.values; });
 
-    var bars = this.bars
+    var g = bars
       .enter()
       .append("g")
-        .attr("id", function(s) { return s.key; })
-        .attr("class", "bar")
-        .attr("transform", function(d) { return "translate(" + x(d.values[0][xKey]) + ", 0)"; });
+        .attr("class", "bar");
 
-    bars.append("rect");
-    bars.append("text");
+    g.append("rect");
+    g.append("text");
 
-    this.bars.exit().remove();
+    bars.exit().remove();
 
-    this.bars.selectAll("rect")
-      .datum(function() {
-        return this.parentNode.__data__.values[0]; })
+    bars
+      .attr("id", function(s) { return s.key; })
+      .attr("transform", function(d) { return "translate(" + x(d.values[0][xKey]) + ", 0)"; });
+
+    bars.selectAll("rect")
+      .datum(function() { return this.parentNode.__data__.values[0]; })
       .attr("x", function(d) { return x1(d[seriesKey]); })
       .attr("y", function(d) { return y(d[yKey]); })
       .attr("width", x1.rangeBand())
-      .attr("height", function(d) {
-        return height - y(d[yKey]); })
+      .attr("height", function(d) { return height - y(d[yKey]); })
       .style("fill", function(d) { return colors(d[seriesKey]); })
       .style("fill-opacity", 0.5)
       .style("stroke", function(d) { return colors(d[seriesKey]); })
-      .style("stroke-width", '1.5px');
+      .style("stroke-width", '1px');
 
-    this.bars.selectAll("text")
-      .datum(function() {
-        return this.parentNode.__data__.values[0]; })
+    bars.selectAll("text")
+      .datum(function() { return this.parentNode.__data__.values[0]; })
+      .text(function(d) { return yAxisFormatter(d[yKey]); })
       .attr("transform", "rotate(-90)")
       .attr("x", function(d) { return -height + (height - y(d[yKey])) + 6; })
       .attr("y", function(d) { return x1(d[seriesKey]) + (0.7 * x1.rangeBand()); })
       .attr("text-anchor", "start")
-      .text(function(d) { return yAxisFormatter(d[yKey]); })
       .style("fill", "#000")
       .style("font-size", "10px");
   },
@@ -618,20 +652,20 @@ Recipe['scatter'] = Recipe['_cartesian'].extend({ //TODO incomplete! need update
     var seriesKey = this.options.seriesKey;
     var colors = this.options.colors;
 
-    this.series = this.svg.selectAll(".series")
+    var series = this.svg.selectAll(".series")
       .data(this.nest);
 
-    this.series
+    series
       .enter()
       .append("g")
-        .attr("id", function(s) { return s.key; })
         .attr("class", "series");
 
-    this.series.exit().remove();
+    series.exit().remove();
 
-    var dot = this.series.selectAll(".dot")
-      .data(function(s) {
-        return s.values; });
+    series.attr("id", function(s) { return s.key; });
+
+    var dot = series.selectAll(".dot")
+      .data(function(s) { return s.values; });
 
     dot
       .enter()
@@ -640,8 +674,7 @@ Recipe['scatter'] = Recipe['_cartesian'].extend({ //TODO incomplete! need update
 
     dot.exit().remove();
 
-    this.series.selectAll(".dot")
-      .data(function(s) { return s.values; })
+    dot
       .attr("r", function(d) { return rFormatter(d[rKey] ? d[rKey] : 1); })
       .attr("cx", function(d) { return x(d[xKey]); })
       .attr("cy", function(d) { return y(d[yKey]); })
