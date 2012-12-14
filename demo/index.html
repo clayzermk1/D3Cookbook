@@ -1,6 +1,6 @@
 <!DOCTYPE HTML>
 <html lang="en_US">
-  
+
   <head>
     <title>D3Cookbook Demo Gallery</title>
     <!-- Styles -->
@@ -8,104 +8,305 @@
     />
     <link rel="stylesheet" href="lib/font-awesome/css/font-awesome.css" type="text/css"
     />
-    <style></style>
+    <style>
+      .nav-list > li > a:first-letter {
+        text-transform:capitalize;
+      }
+    </style>
   </head>
-  
+
   <body>
+    <!-- jQuery 1.8.2 breaks support for svg events -->
+    <script type="text/javascript" src="lib/jquery/jquery-1.8.1.min.js"></script>
+    <script type="text/javascript" src="lib/lodash/lodash.min.js"></script>
+    <script type="text/javascript" src="lib/bootstrap/js/bootstrap.min.js"></script>
+    <script type="text/javascript" src="lib/d3/d3.v3.js"></script>
+    <script type="text/javascript" src="../dist/D3Cookbook.js"></script>
+    <script type="text/javascript">
+      $(document).on('ready', function(e) {
+        // Build out the nav list.
+        var bookmarks = ["overview"].concat(_.map($('#overview div.row-fluid'), function(d, i) { return $(d).attr("id"); }));
+        d3.select(".nav-list").selectAll("li:not(.nav-header)")
+          .data(bookmarks)
+          .enter()
+          .append("li")
+            .append("a")
+              .attr("href", function(d) {
+                return "#" + d; })
+              .text(function(d) {
+                return d; });
+
+        // Fire up the affix bootstrap plugin on the navbar.
+        $('.nav-list').affix({
+          offset: {
+            top: function () { return $(window).width() <= 980 ? 290 : 210 },
+            bottom: 270
+          }
+        });
+
+
+      });
+    </script>
+
     <div class="container-fluid">
       <div class="row-fluid">
         <div id="nav" class="span3">
-          <div class="well sidebar-nav">
-            <ul class="nav nav-list">
-              <li class="nav-header">Visualizations</li>
-              <li class="active">
-                <a href="#home">Home</a>
-              </li>
-              <li>
-                <a href="#pie">Pie</a>
-              </li>
-            </ul>
-          </div>
-          <!--/.well -->
+          <ul class="nav nav-list well span3">
+            <li class="nav-header">Visualizations</li>
+          </ul>
         </div>
         <!--/nav-->
-        <div id="home" class="span9">
+        <div id="overview" class="span9">
           <div class="hero-unit">
             <h1>D3 Cookbook</h1>
             <p>A collection of modular, reusable d3 recipes.</p>
+            <p>D3 is an amazing tool, but it has a bit of a learning curve and it doesn't lend itself to reuse.
+            Each visualization is best created from scratch and attempts to abstract concepts from D3 just add bloat and reduce the performance found in D3.
+            So the question is: "How do you make D3 reusable without decreasing performance?"
+            The solution we chose is just to make a "cookbook" full of recipes for common (or not so common) visualizations and make them as modular as possible.</p>
           </div>
-          <div class="row-fluid">
-            <div class="span4">
-              <h2>Heading</h2>
-              <p>Donec id elit non mi porta gravida at eget metus. Fusce dapibus, tellus
-                ac cursus commodo, tortor mauris condimentum nibh, ut fermentum massa justo
-                sit amet risus. Etiam porta sem malesuada magna mollis euismod. Donec sed
-                odio dui.</p>
-              <p>
-                <a class="btn" href="#">View details &raquo;</a>
-              </p>
-            </div>
-            <!--/span-->
-            <div class="span4">
-              <h2>Heading</h2>
-              <p>Donec id elit non mi porta gravida at eget metus. Fusce dapibus, tellus
-                ac cursus commodo, tortor mauris condimentum nibh, ut fermentum massa justo
-                sit amet risus. Etiam porta sem malesuada magna mollis euismod. Donec sed
-                odio dui.</p>
-              <p>
-                <a class="btn" href="#">View details &raquo;</a>
-              </p>
-            </div>
-            <!--/span-->
-            <div class="span4">
-              <h2>Heading</h2>
-              <p>Donec id elit non mi porta gravida at eget metus. Fusce dapibus, tellus
-                ac cursus commodo, tortor mauris condimentum nibh, ut fermentum massa justo
-                sit amet risus. Etiam porta sem malesuada magna mollis euismod. Donec sed
-                odio dui.</p>
-              <p>
-                <a class="btn" href="#">View details &raquo;</a>
-              </p>
-            </div>
-            <!--/span-->
+
+          <!-- pie -->
+          <div id="pie" class="row-fluid">
+            <h2>Pie</h2>
+            <p>Pie charts are a great way to look at parts of a whole (percents or fractions).</p>
+            <div class="vis"></div>
+            <button type="button" class="btn update">Update visualization with random data</button>
+            <h4>Data:</h4>
+            <pre>[
+  {"age": "&lt;5",    "population": 2704659},
+  {"age": "5-13",  "population": 4499890},
+  {"age": "14-17", "population": 2159981},
+  {"age": "18-24", "population": 3853788},
+  {"age": "25-44", "population": 14106543},
+  {"age": "45-64", "population": 8819342},
+  {"age": "&gt;=65",  "population": 612463}
+]</pre>
+            <script type="text/javascript">
+              var pie = null;
+              $(document).on('ready', function() {
+                pie = new Recipe['pie']({
+                  "data": JSON.parse($('#donut pre').text()),
+                  "selector": "#pie .vis",
+                  "labelKey": "age",
+                  "valueKey": "population"
+                });
+              })
+              .on('click', '#pie button.btn.update', function(e) {
+                _.each(pie.options.data, function(d) {
+                  d.population = Math.random() * 10000000;
+                });
+                pie.update();
+              });
+            </script>
           </div>
-          <!--/row-->
-          <div class="row-fluid">
-            <div class="span4">
-              <h2>Heading</h2>
-              <p>Donec id elit non mi porta gravida at eget metus. Fusce dapibus, tellus
-                ac cursus commodo, tortor mauris condimentum nibh, ut fermentum massa justo
-                sit amet risus. Etiam porta sem malesuada magna mollis euismod. Donec sed
-                odio dui.</p>
-              <p>
-                <a class="btn" href="#">View details &raquo;</a>
-              </p>
-            </div>
-            <!--/span-->
-            <div class="span4">
-              <h2>Heading</h2>
-              <p>Donec id elit non mi porta gravida at eget metus. Fusce dapibus, tellus
-                ac cursus commodo, tortor mauris condimentum nibh, ut fermentum massa justo
-                sit amet risus. Etiam porta sem malesuada magna mollis euismod. Donec sed
-                odio dui.</p>
-              <p>
-                <a class="btn" href="#">View details &raquo;</a>
-              </p>
-            </div>
-            <!--/span-->
-            <div class="span4">
-              <h2>Heading</h2>
-              <p>Donec id elit non mi porta gravida at eget metus. Fusce dapibus, tellus
-                ac cursus commodo, tortor mauris condimentum nibh, ut fermentum massa justo
-                sit amet risus. Etiam porta sem malesuada magna mollis euismod. Donec sed
-                odio dui.</p>
-              <p>
-                <a class="btn" href="#">View details &raquo;</a>
-              </p>
-            </div>
-            <!--/span-->
+          <!--/pie-->
+
+          <!-- donut -->
+          <div id="donut" class="row-fluid">
+            <h2>Donut</h2>
+            <p>Donut charts are pie charts with a hole in the middle. Like pie charts, donut charts are a great way to look at parts of a whole (percents or fractions).</p>
+            <div class="vis"></div>
+            <button type="button" class="btn update">Update visualization with random data</button>
+            <h4>Data:</h4>
+            <pre>[
+  {"age": "&lt;5",    "population": 2704659},
+  {"age": "5-13",  "population": 4499890},
+  {"age": "14-17", "population": 2159981},
+  {"age": "18-24", "population": 3853788},
+  {"age": "25-44", "population": 14106543},
+  {"age": "45-64", "population": 8819342},
+  {"age": "&gt;=65",  "population": 612463}
+]</pre>
+            <script type="text/javascript">
+              var donut = null;
+              $(document).on('ready', function() {
+                donut = new Recipe['pie']({
+                  "data": JSON.parse($('#donut pre').text()),
+                  "selector": "#donut .vis",
+                  "labelKey": "age",
+                  "valueKey": "population",
+                  "rh": 150 // Just make the radius of the hole ("rh" = "radius of hole") something > 0 to make a pie chart a donut chart.
+                });
+              })
+              .on('click', '#donut button.btn.update', function(e) {
+                _.each(donut.options.data, function(d) {
+                  d.population = Math.random() * 10000000;
+                });
+                donut.update();
+              });
+            </script>
           </div>
-          <!--/row-->
+          <!--/donut-->
+
+          <!-- cartesian -->
+          <div id="cartesian" class="row-fluid">
+            <h2>Cartesian</h2>
+            <p>Cartesian graphs are ideal for displaying two-dimensional continuous data.</p>
+            <p>Line, Area, and Scatter are all subclasses of Cartesian. Cartesian itself is never called directly.</p>
+          </div>
+          <!--/cartesian-->
+
+          <!-- line -->
+          <div id="line" class="row-fluid">
+            <h2>Line</h2>
+            <p>Line graphs display a set of interpolated points as a line.</p>
+            <div class="vis"></div>
+            <button type="button" class="btn update">Update visualization with random data</button>
+            <h4>Data Sample:</h4>
+            <span>Full data set can be found in <a href="./data/browsers.json">browsers.json</a>.</span>
+            <pre>[
+  {"date": "11-Oct-13", "percent": "41.62", "browser": "IE"},
+  ...
+  {"date": "11-Oct-13", "percent": "22.36", "browser": "Chrome"},
+  ...
+  {"date": "11-Oct-13", "percent": "25.58", "browser": "Firefox"},
+  ...
+  {"date": "11-Oct-13", "percent": "9.13", "browser": "Safari"},
+  ...
+  {"date": "11-Oct-13", "percent": "1.22", "browser": "Opera"},
+  ...
+]</pre>
+            <script type="text/javascript">
+              var line = null;
+              $(document).on('ready', function() {
+                d3.json('./data/browsers.json', function(err, json) {
+                  line = new Recipe['line']({
+                    "data": json,
+                    "selector": "#line .vis",
+                    "xKey": "date",
+                    "yKey": "percent",
+                    "seriesKey": "browser",
+                    "xFormatter": d3.time.format("%y-%b-%d").parse,
+                    "yFormatter": function(d) { return +d; },
+                    "xScale": d3.time.scale,
+                    "xAxisLabel": "Date",
+                    "yAxisLabel": "Percent (%)",
+                    "xAxisFormatter": d3.time.format("%x")
+                  });
+                });
+              })
+              .on('click', '#line button.btn.update', function(e) {
+                var browsers = _.chain(line.options.data).pluck("browser").uniq().value();
+                _.each(line.options.data, function(d, i) {
+                  d.percent = (Math.random() * 10) + ((browsers.indexOf(d.browser)+1) * 10);
+                });
+                line.update();
+              });
+            </script>
+          </div>
+          <!--/line-->
+
+          <!-- area -->
+          <div id="area" class="row-fluid">
+            <h2>Area</h2>
+            <p>Area graphs display a set of interpolated points as a line, the region beneith which is opaque.</p>
+            <div class="vis"></div>
+            <button type="button" class="btn update">Update visualization with random data</button>
+            <h4>Data Sample:</h4>
+            <span>Full data set can be found in <a href="./data/browsers.json">browsers.json</a>.</span>
+            <pre>[
+  {"date": "11-Oct-13", "percent": "41.62", "browser": "IE"},
+  ...
+  {"date": "11-Oct-13", "percent": "22.36", "browser": "Chrome"},
+  ...
+  {"date": "11-Oct-13", "percent": "25.58", "browser": "Firefox"},
+  ...
+  {"date": "11-Oct-13", "percent": "9.13", "browser": "Safari"},
+  ...
+  {"date": "11-Oct-13", "percent": "1.22", "browser": "Opera"},
+  ...
+]</pre>
+            <script type="text/javascript">
+              var area = null;
+              $(document).on('ready', function() {
+                d3.json('./data/browsers.json', function(err, json) {
+                  area = new Recipe['area']({
+                    "data": json,
+                    "selector": "#area .vis",
+                    "xKey": "date",
+                    "yKey": "percent",
+                    "seriesKey": "browser",
+                    "xFormatter": d3.time.format("%y-%b-%d").parse,
+                    "yFormatter": function(d) { return +d; },
+                    "xScale": d3.time.scale,
+                    "xAxisLabel": "Date",
+                    "yAxisLabel": "Percent (%)",
+                    "xAxisFormatter": d3.time.format("%x")
+                  });
+                });
+              })
+              .on('click', '#area button.btn.update', function(e) {
+                var browsers = _.chain(area.options.data).pluck("browser").uniq().value();
+                _.each(area.options.data, function(d, i) {
+                  d.percent = Math.random() * 10 * (browsers.length - browsers.indexOf(d.browser) + 1);
+                });
+                area.update();
+              });
+            </script>
+          </div>
+          <!--/area-->
+
+          <!-- scatter -->
+          <div id="scatter" class="row-fluid">
+            <h2>Scatter</h2>
+            <p>Scatter plots display a set of (possibly overlapping) points in a sort of "swarm".
+            The cookbook's scatter plot has the ability to assign a third dimension (point radius) to the data.</p>
+            <div class="vis"></div>
+            <button type="button" class="btn update">Update visualization with random data</button>
+            <button type="button" class="btn append">Append random data to the visualization</button>
+            <h4>Data Sample:</h4>
+            <span>Full data set can be found in <a href="./data/flowers.json">flowers.json</a>.</span>
+            <pre>[
+  {"sepalLength": 5.1, "sepalWidth": 3.5, "petalLength": 1.4, "petalWidth": 0.2, "species": "setosa"},
+  ...
+  {"sepalLength": 7.0, "sepalWidth": 3.2, "petalLength": 4.7, "petalWidth": 1.4, "species": "versicolor"},
+  ...
+  {"sepalLength": 6.3, "sepalWidth": 3.3, "petalLength": 6.0, "petalWidth": 2.5, "species": "virginica"},
+  ...
+]</pre>
+            <script type="text/javascript">
+              var scatter = null;
+              $(document).on('ready', function() {
+                d3.json('./data/flowers.json', function(err, json) {
+                  scatter = new Recipe['scatter']({
+                    "data": json,
+                    "selector": "#scatter .vis",
+                    "xKey": "sepalWidth",
+                    "yKey": "sepalLength",
+                    "rKey": "petalLength",
+                    "seriesKey": "species",
+                    "xAxisLabel": "Sepal Width",
+                    "yAxisLabel": "Sepal Lenght",
+                    "rAxisLabel": "Point radius indicates Petal Length",
+                    "xAxisFormatter": function(d) { return d3.round(d, 2); }
+                  });
+                });
+              })
+              .on('click', '#scatter button.btn.update', function(e) {
+                var browsers = _.chain(scatter.options.data).pluck("browser").uniq().value();
+                _.each(scatter.options.data, function(d, i) {
+                  d.sepalLength = Math.random() * 10;
+                  d.sepalWidth = Math.random() + 3;
+                  d.petalLength = Math.random() * 10.0;
+                  d.petalWidth = Math.random() + 1;
+                });
+                scatter.update();
+              })
+              .on('click', '#scatter button.btn.append', function(e) {
+                scatter.update([
+                  {"sepalLength": Math.random() * 10.0, "sepalWidth": Math.random() + 3.0, "petalLength": Math.random() * 10.0, "petalWidth": Math.random() + 1, "species": "randomcolor"},
+                  {"sepalLength": Math.random() * 10.0, "sepalWidth": Math.random() + 3.0, "petalLength": Math.random() * 10.0, "petalWidth": Math.random() + 1, "species": "randomcolor"},
+                  {"sepalLength": Math.random() * 10.0, "sepalWidth": Math.random() + 3.0, "petalLength": Math.random() * 10.0, "petalWidth": Math.random() + 1, "species": "randomcolor"},
+                  {"sepalLength": Math.random() * 10.0, "sepalWidth": Math.random() + 3.0, "petalLength": Math.random() * 10.0, "petalWidth": Math.random() + 1, "species": "randomcolor"},
+                  {"sepalLength": Math.random() * 10.0, "sepalWidth": Math.random() + 3.0, "petalLength": Math.random() * 10.0, "petalWidth": Math.random() + 1, "species": "randomcolor"},
+                  {"sepalLength": Math.random() * 10.0, "sepalWidth": Math.random() + 3.0, "petalLength": Math.random() * 10.0, "petalWidth": Math.random() + 1, "species": "randomcolor"}
+                ].concat(scatter.options.data));
+              });
+            </script>
+          </div>
+          <!--/scatter-->
+
         </div>
         <!--/home-->
         <div id="pie" class="span9 hide">
@@ -123,49 +324,5 @@
       </footer>
     </div>
     <!--/home-->
-    <!-- JavaScript, placed at the end of the document so the pages load faster.
-    -->
-    <script type="text/javascript" src="lib/jquery/jquery-1.8.1.min.js"></script>
-    <!-- jQuery 1.8.2 breaks support for svg events -->
-    <script type="text/javascript" src="lib/bootstrap/js/bootstrap.min.js"></script>
-    <script type="text/javascript" src="lib/d3/d3.v2.min.js"></script>
-    <script type="text/javascript" src="../dist/D3Cookbook.js"></script>
-    <script type="text/javascript">
-      var recipe;
-      $(document).on('ready', function() {
-        // Create our recipe.
-        var data = [
-          {"label": "<5", "value": 2704659, "color": "#98abc5"},
-          {"label": "5-13", "value": 4499890, "color": "#8a89a6"},
-          {"label": "14-17", "value": 2159981, "color": "#7b6888"},
-          {"label": "18-24", "value": 3853788, "color": "#6b486b"},
-          {"label": "25-44", "value": 14106543, "color": "#a05d56"},
-          {"label": "45-64", "value": 8819342, "color": "#d0743c"},
-          {"label": "≥65", "value": 612463, "color": "#ff8c00"}
-        ];
-        var options = {
-          "recipe": "pie",
-          "selector": "#pie .recipe"
-        };
-        recipe = new Recipe(data, options);
-      })
-
-      // Navigation handler.
-      .on('click', '#nav ul.nav a', function(e) {
-        // Get the hash.
-        var hash = $(e.target).attr('href');
-
-        // Hide the current nav.
-        var currentNav = $('#nav ul.nav li.active').removeClass('active').children('a').attr('href');
-        $(currentNav).hide();
-
-        // Update the navigation bar.
-        $(e.target).parent().addClass('active');
-
-        // Fade in the clicked nav.
-        $(hash).fadeIn('fast');
-      });
-    </script>
   </body>
-
 </html>

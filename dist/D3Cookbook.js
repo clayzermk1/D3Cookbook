@@ -1,4 +1,4 @@
-/*! D3Cookbook - v0.1.0 - 2012-12-12
+/*! D3Cookbook - v0.1.0 - 2012-12-13
 * https://github.com/clayzermk1/D3Cookbook
 * Copyright (c) 2012 ; Licensed  */
 
@@ -71,24 +71,35 @@ var Recipe = Class.extend({
     width: 500
   },
 
-  data: null,
   options: null,
   svg: null,
 
-  init: function(data, options){
+  init: function(options){
     this.options = _.defaults(options, this.defaultOptions);
     this.svg = d3.select(this.options.selector ? this.options.selector : "body").append("svg")
         .attr("width", this.options.width + this.options.margin.left + this.options.margin.right)
         .attr("height", this.options.height + this.options.margin.top + this.options.margin.bottom)
       .append("g");
 
-    this.parseData(data);
+    this.parseData(this.options.data);
 
     return this;
   },
 
   parseData: function(data) {
-    this.data = _.clone(data, true);
+    this.options.data = _.clone(data, true);
+  },
+
+  update: function(data) {
+    // Update the data.
+    if (!_.isUndefined(data)) {
+      this.parseData(data);
+    } else {
+      this.parseData(this.options.data);
+    }
+
+    // Redraw the graph.
+    this.drawGraph();
   }
 });
 
@@ -119,7 +130,7 @@ Recipe['pie'] = Recipe.extend({
   parseData: function(data) {
     this._super(data);
 
-    _.each(this.data, function(d) {
+    _.each(this.options.data, function(d) {
         d[this.options.valueKey] = this.options.valueFormatter(d[this.options.valueKey]);
     }, this);
   },
@@ -138,7 +149,7 @@ Recipe['pie'] = Recipe.extend({
       .value(function(d) { return d[valueKey]; });
 
     var value = this.svg.selectAll(".value")
-      .data(pie(this.data));
+      .data(pie(this.options.data));
 
     var g = value
       .enter()
@@ -164,29 +175,6 @@ Recipe['pie'] = Recipe.extend({
       .attr("transform", function(d) { return "translate(" + arc.centroid(d) + ")"; })
       .attr("dy", ".35em")
       .style("text-anchor", "middle");
-  },
-
-  update: function(data) {
-    // Update the data.
-    this.parseData(data);
-
-    // Redraw the graph.
-    this.drawGraph();
-  }
-});
-
-Recipe['donut'] = Recipe['pie'].extend({
-  defaultOptions: {
-    margin: {top: 50, right: 50, bottom: 50, left: 50},
-    height: 500,
-    width: 500,
-    r: 250,
-    rh: 150,
-    labelKey: "label",
-    valueKey: "value",
-    labelFormatter: function(d) { return d; },
-    valueFormatter: function(d) { return d; },
-    colors: d3.scale.category10()
   }
 });
 
@@ -230,16 +218,28 @@ Recipe['_cartesian'] = Recipe.extend({
   parseData: function(data) {
     this._super(data);
 
-    _.each(this.data, function(d) {
+    _.each(this.options.data, function(d) {
+      try {
         d[this.options.xKey] = this.options.xFormatter(d[this.options.xKey]);
+      } catch (e) {
+        if (!(e instanceof TypeError)) {
+          throw e;
+        }
+      }
+      try {
         d[this.options.yKey] = this.options.yFormatter(d[this.options.yKey]);
+      } catch (e) {
+        if (!(e instanceof TypeError)) {
+          throw e;
+        }
+      }
     }, this);
 
     // Nest the data by series.
     var seriesKey = this.options.seriesKey;
     this.nest = d3.nest()
       .key(_.isFunction(seriesKey) ? seriesKey : function(d) { return d[seriesKey]; })
-      .entries(this.data);
+      .entries(this.options.data);
   },
 
   createScales: function() {
@@ -247,11 +247,11 @@ Recipe['_cartesian'] = Recipe.extend({
     var yKey = this.options.yKey;
 
     this.x = this.options.xScale()
-      .domain(d3.extent(this.data, function(d) { return d[xKey]; }))
+      .domain(d3.extent(this.options.data, function(d) { return d[xKey]; }))
       .range([0, this.options.width]);
 
     this.y = this.options.yScale()
-      .domain(d3.extent(this.data, function(d) { return d[yKey]; }))
+      .domain(d3.extent(this.options.data, function(d) { return d[yKey]; }))
       .range([this.options.height, 0])
       .nice();
   },
@@ -260,8 +260,8 @@ Recipe['_cartesian'] = Recipe.extend({
     var xKey = this.options.xKey;
     var yKey = this.options.yKey;
 
-    this.x.domain(d3.extent(this.data, function(d) { return d[xKey]; }));
-    this.y.domain(d3.extent(this.data, function(d) { return d[yKey]; })).nice();
+    this.x.domain(d3.extent(this.options.data, function(d) { return d[xKey]; }));
+    this.y.domain(d3.extent(this.options.data, function(d) { return d[yKey]; })).nice();
   },
 
   createAxes: function() {
@@ -312,7 +312,11 @@ Recipe['_cartesian'] = Recipe.extend({
 
   update: function(data) {
     // Update the data.
-    this.parseData(data);
+    if (!_.isUndefined(data)) {
+      this.parseData(data);
+    } else {
+      this.parseData(this.options.data);
+    }
 
     // Update the scale domains.
     this.updateScales();
@@ -401,29 +405,41 @@ Recipe['bar'] = Recipe.extend({
     margin: {top: 50, right: 50, bottom: 50, left: 50},
     height: 500,
     width: 500,
+    lData: null,
     xKey: "x",
     yKey: "y",
+    lKey: "",
     xFormatter: function(d) { return d; },
     yFormatter: function(d) { return d; },
+    lFormatter: function(d) { return d; },
     xScale: d3.scale.ordinal,
     yScale: d3.scale.linear,
+    lScale: d3.scale.linear,
     xAxisLabel: "",
     yAxisLabel: "",
+    lAxisLabel: "",
     xAxisFormatter: function(d) { return d; },
     yAxisFormatter: function(d) { return d; },
+    lAxisFormatter: function(d) { return d; },
     seriesKey: "",
-    colors: d3.scale.category10()
+    colors: d3.scale.category10(),
+    lColor: "#000"
   },
 
   nest: null,
+  lData: null,
   x: null,
   x1: null,
   y: null,
+  l: null,
   xAxis: null,
   yAxis: null,
+  lAxis: null,
 
   init: function(data, options){
     this._super(data, options);
+
+    this.parseLineData(this.options.lData);
 
     this.svg.attr("transform", "translate(" + this.options.margin.left + "," + this.options.margin.top + ")");
 
@@ -451,9 +467,18 @@ Recipe['bar'] = Recipe.extend({
       .entries(this.data);
   },
 
+  parseLineData: function(lData) {
+    this.lData = _.clone(lData, true);
+
+    _.each(this.lData, function(d) {
+        d[this.options.lKey] = this.options.lFormatter(d[this.options.lKey]);
+    }, this);
+  },
+
   createScales: function() {
     var xKey = this.options.xKey;
     var yKey = this.options.yKey;
+    var lKey = this.options.lKey;
     var seriesKey = this.options.seriesKey;
 
     this.x = this.options.xScale()
@@ -468,16 +493,28 @@ Recipe['bar'] = Recipe.extend({
       .domain([0, d3.max(this.data, function(d) { return d[yKey]; })])
       .range([this.options.height, 0])
       .nice();
+
+    if (!_.isEmpty(lKey)) {
+      this.l = this.options.lScale()
+        .domain(d3.extent(this.lData, function(d) { return d[lKey]; }))
+        .range([this.options.height, 0])
+        .nice();
+    }
   },
 
   updateScales: function() {
     var xKey = this.options.xKey;
     var yKey = this.options.yKey;
+    var lKey = this.options.lKey;
     var seriesKey = this.options.seriesKey;
 
     this.x.domain(_.chain(this.data).pluck(xKey).uniq().value());
     this.x1.domain(_.chain(this.data).pluck(seriesKey).uniq().value());
     this.y.domain([0, d3.max(this.data, function(d) { return d[yKey]; })]).nice();
+
+    if (!_.isEmpty(lKey)) {
+      this.l.domain(d3.extent(this.lData, function(d) { return d[lKey]; })).nice();
+    }
   },
 
   createAxes: function() {
@@ -490,6 +527,13 @@ Recipe['bar'] = Recipe.extend({
       .scale(this.y)
       .orient("left")
       .tickFormat(this.options.yAxisFormatter);
+
+    if (!_.isEmpty(this.options.lKey)) {
+      this.lAxis = d3.svg.axis()
+        .scale(this.l)
+        .orient("right")
+        .tickFormat(this.options.lAxisFormatter);
+    }
 
     this.drawAxes();
   },
@@ -517,6 +561,20 @@ Recipe['bar'] = Recipe.extend({
         .style("text-anchor", "middle")
         .text(this.options.yAxisLabel);
 
+    if (!_.isEmpty(this.options.lKey)) {
+      this.svg.append("g")
+        .attr("class", "l axis")
+        .attr("transform", "translate(" + this.options.width + ", 0)")
+        .call(this.lAxis)
+        .append("text")
+          .attr("transform", "rotate(90)")
+          .attr("x", this.options.height / 2)
+          .attr("y", -(this.options.margin.right - 10))
+          .attr("dy", ".71em")
+          .style("text-anchor", "middle")
+          .text(this.options.lAxisLabel);
+    }
+
     d3.selectAll('.axis path, .axis line')
       .style("fill", "none")
       .style("stroke", "black")
@@ -530,8 +588,10 @@ Recipe['bar'] = Recipe.extend({
     var x = this.x;
     var x1 = this.x1;
     var y = this.y;
+    var l = this.l;
     var xKey = this.options.xKey;
     var yKey = this.options.yKey;
+    var lKey = this.options.lKey;
     var seriesKey = this.options.seriesKey;
     var colors = this.options.colors;
     var height = this.options.height;
@@ -585,6 +645,21 @@ Recipe['bar'] = Recipe.extend({
       .attr("text-anchor", "start")
       .style("fill", "#000")
       .style("font-size", "10px");
+
+    if (!_.isEmpty(lKey)) {
+      this.svg.append("g")
+          .attr("class", "line")
+          .attr("transform", "translate(" + (x.rangeBand() / 2) + ", 0)")
+          .append("path")
+            .datum(this.lData)
+            .attr("d", d3.svg.line()
+              .x(function(d) { return x(d[xKey]); })
+              .y(function(d) { return l(d[lKey]); })
+            )
+            .style("fill", 'none')
+            .style("stroke", this.options.lColor)
+            .style("stroke-width", '1px');
+    }
   },
 
   update: function(data) {
@@ -600,10 +675,25 @@ Recipe['bar'] = Recipe.extend({
     // Redraw the axes.
     this.svg.selectAll(".axis").remove();
     this.drawAxes();
+  },
+
+  updateLine: function(lData) {
+    // Update the line data.
+    this.parseLineData(lData);
+
+    // Update the scale domains.
+    this.updateScales();
+
+    // Redraw the graph.
+    this.drawGraph();
+
+    // Redraw the axes.
+    this.svg.selectAll(".axis").remove();
+    this.drawAxes();
   }
 });
 
-Recipe['scatter'] = Recipe['_cartesian'].extend({ //TODO incomplete! need updates to work dynamically.
+Recipe['scatter'] = Recipe['_cartesian'].extend({
   defaultOptions: {
     margin: {top: 50, right: 50, bottom: 50, left: 50},
     height: 500,

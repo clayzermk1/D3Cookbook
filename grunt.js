@@ -25,7 +25,6 @@ module.exports = function(grunt) {
           '<file_strip_banner:lib/jrclass.js>',
           '<file_strip_banner:lib/Recipe.js>',
           '<file_strip_banner:lib/Recipe.pie.js>',
-          '<file_strip_banner:lib/Recipe.donut.js>',
           '<file_strip_banner:lib/Recipe._cartesian.js>',
           '<file_strip_banner:lib/Recipe.line.js>',
           '<file_strip_banner:lib/Recipe.area.js>',
