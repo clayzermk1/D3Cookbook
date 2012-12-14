@@ -72,6 +72,7 @@
             <p>Pie charts are a great way to look at parts of a whole (percents or fractions).</p>
             <div class="vis"></div>
             <button type="button" class="btn update">Update visualization with random data</button>
+            <button type="button" class="btn append">Append random data to the visualization</button>
             <h4>Data:</h4>
             <pre>[
   {"age": "&lt;5",    "population": 2704659},
@@ -97,6 +98,13 @@
                   d.population = Math.random() * 10000000;
                 });
                 pie.update();
+              })
+              .on('click', '#pie button.btn.append', function(e) {
+                pie.update({
+                  "data": pie.options.data.concat([
+                    {"age": ">100", "population": 70490}
+                  ])
+                });
               });
             </script>
           </div>
@@ -108,15 +116,16 @@
             <p>Donut charts are pie charts with a hole in the middle. Like pie charts, donut charts are a great way to look at parts of a whole (percents or fractions).</p>
             <div class="vis"></div>
             <button type="button" class="btn update">Update visualization with random data</button>
+            <button type="button" class="btn append">Append random data to the visualization</button>
             <h4>Data:</h4>
             <pre>[
-  {"age": "&lt;5",    "population": 2704659},
-  {"age": "5-13",  "population": 4499890},
+  {"age": "&lt;5", "population": 2704659},
+  {"age": "5-13", "population": 4499890},
   {"age": "14-17", "population": 2159981},
   {"age": "18-24", "population": 3853788},
   {"age": "25-44", "population": 14106543},
   {"age": "45-64", "population": 8819342},
-  {"age": "&gt;=65",  "population": 612463}
+  {"age": "&gt;=65", "population": 612463}
 ]</pre>
             <script type="text/javascript">
               var donut = null;
@@ -134,6 +143,13 @@
                   d.population = Math.random() * 10000000;
                 });
                 donut.update();
+              })
+              .on('click', '#donut button.btn.append', function(e) {
+                donut.update({
+                  "data": donut.options.data.concat([
+                    {"age": ">100", "population": 70490}
+                  ])
+                });
               });
             </script>
           </div>
@@ -153,6 +169,7 @@
             <p>Line graphs display a set of interpolated points as a line.</p>
             <div class="vis"></div>
             <button type="button" class="btn update">Update visualization with random data</button>
+            <button type="button" class="btn append">Append random data to the visualization</button>
             <h4>Data Sample:</h4>
             <span>Full data set can be found in <a href="./data/browsers.json">browsers.json</a>.</span>
             <pre>[
@@ -192,6 +209,30 @@
                   d.percent = (Math.random() * 10) + ((browsers.indexOf(d.browser)+1) * 10);
                 });
                 line.update();
+              })
+              .on('click', '#line button.btn.append', function(e) {
+                line.update({
+                  "data": line.options.data.concat([
+                    {"date": "11-Oct-13", "percent": Math.random() * 100, "browser": "Maxthon"},
+                    {"date": "11-Oct-14", "percent": Math.random() * 100, "browser": "Maxthon"},
+                    {"date": "11-Oct-15", "percent": Math.random() * 100, "browser": "Maxthon"},
+                    {"date": "11-Oct-16", "percent": Math.random() * 100, "browser": "Maxthon"},
+                    {"date": "11-Oct-17", "percent": Math.random() * 100, "browser": "Maxthon"},
+                    {"date": "11-Oct-18", "percent": Math.random() * 100, "browser": "Maxthon"},
+                    {"date": "11-Oct-19", "percent": Math.random() * 100, "browser": "Maxthon"},
+                    {"date": "11-Oct-20", "percent": Math.random() * 100, "browser": "Maxthon"},
+                    {"date": "11-Oct-21", "percent": Math.random() * 100, "browser": "Maxthon"},
+                    {"date": "11-Oct-22", "percent": Math.random() * 100, "browser": "Maxthon"},
+                    {"date": "11-Oct-23", "percent": Math.random() * 100, "browser": "Maxthon"},
+                    {"date": "11-Oct-24", "percent": Math.random() * 100, "browser": "Maxthon"},
+                    {"date": "11-Oct-25", "percent": Math.random() * 100, "browser": "Maxthon"},
+                    {"date": "11-Oct-26", "percent": Math.random() * 100, "browser": "Maxthon"},
+                    {"date": "11-Oct-27", "percent": Math.random() * 100, "browser": "Maxthon"},
+                    {"date": "11-Oct-28", "percent": Math.random() * 100, "browser": "Maxthon"},
+                    {"date": "11-Oct-29", "percent": Math.random() * 100, "browser": "Maxthon"},
+                    {"date": "11-Oct-30", "percent": Math.random() * 100, "browser": "Maxthon"}
+                  ])
+                });
               });
             </script>
           </div>
@@ -203,6 +244,7 @@
             <p>Area graphs display a set of interpolated points as a line, the region beneith which is opaque.</p>
             <div class="vis"></div>
             <button type="button" class="btn update">Update visualization with random data</button>
+            <button type="button" class="btn append">Append random data to the visualization</button>
             <h4>Data Sample:</h4>
             <span>Full data set can be found in <a href="./data/browsers.json">browsers.json</a>.</span>
             <pre>[
@@ -242,6 +284,30 @@
                   d.percent = Math.random() * 10 * (browsers.length - browsers.indexOf(d.browser) + 1);
                 });
                 area.update();
+              })
+              .on('click', '#area button.btn.append', function(e) {
+                area.update({
+                  "data": area.options.data.concat([
+                    {"date": "11-Oct-13", "percent": Math.random() * 100, "browser": "Maxthon"},
+                    {"date": "11-Oct-14", "percent": Math.random() * 100, "browser": "Maxthon"},
+                    {"date": "11-Oct-15", "percent": Math.random() * 100, "browser": "Maxthon"},
+                    {"date": "11-Oct-16", "percent": Math.random() * 100, "browser": "Maxthon"},
+                    {"date": "11-Oct-17", "percent": Math.random() * 100, "browser": "Maxthon"},
+                    {"date": "11-Oct-18", "percent": Math.random() * 100, "browser": "Maxthon"},
+                    {"date": "11-Oct-19", "percent": Math.random() * 100, "browser": "Maxthon"},
+                    {"date": "11-Oct-20", "percent": Math.random() * 100, "browser": "Maxthon"},
+                    {"date": "11-Oct-21", "percent": Math.random() * 100, "browser": "Maxthon"},
+                    {"date": "11-Oct-22", "percent": Math.random() * 100, "browser": "Maxthon"},
+                    {"date": "11-Oct-23", "percent": Math.random() * 100, "browser": "Maxthon"},
+                    {"date": "11-Oct-24", "percent": Math.random() * 100, "browser": "Maxthon"},
+                    {"date": "11-Oct-25", "percent": Math.random() * 100, "browser": "Maxthon"},
+                    {"date": "11-Oct-26", "percent": Math.random() * 100, "browser": "Maxthon"},
+                    {"date": "11-Oct-27", "percent": Math.random() * 100, "browser": "Maxthon"},
+                    {"date": "11-Oct-28", "percent": Math.random() * 100, "browser": "Maxthon"},
+                    {"date": "11-Oct-29", "percent": Math.random() * 100, "browser": "Maxthon"},
+                    {"date": "11-Oct-30", "percent": Math.random() * 100, "browser": "Maxthon"}
+                  ])
+                });
               });
             </script>
           </div>
@@ -284,7 +350,6 @@
                 });
               })
               .on('click', '#scatter button.btn.update', function(e) {
-                var browsers = _.chain(scatter.options.data).pluck("browser").uniq().value();
                 _.each(scatter.options.data, function(d, i) {
                   d.sepalLength = Math.random() * 10;
                   d.sepalWidth = Math.random() + 3;
@@ -294,18 +359,170 @@
                 scatter.update();
               })
               .on('click', '#scatter button.btn.append', function(e) {
-                scatter.update([
-                  {"sepalLength": Math.random() * 10.0, "sepalWidth": Math.random() + 3.0, "petalLength": Math.random() * 10.0, "petalWidth": Math.random() + 1, "species": "randomcolor"},
-                  {"sepalLength": Math.random() * 10.0, "sepalWidth": Math.random() + 3.0, "petalLength": Math.random() * 10.0, "petalWidth": Math.random() + 1, "species": "randomcolor"},
-                  {"sepalLength": Math.random() * 10.0, "sepalWidth": Math.random() + 3.0, "petalLength": Math.random() * 10.0, "petalWidth": Math.random() + 1, "species": "randomcolor"},
-                  {"sepalLength": Math.random() * 10.0, "sepalWidth": Math.random() + 3.0, "petalLength": Math.random() * 10.0, "petalWidth": Math.random() + 1, "species": "randomcolor"},
-                  {"sepalLength": Math.random() * 10.0, "sepalWidth": Math.random() + 3.0, "petalLength": Math.random() * 10.0, "petalWidth": Math.random() + 1, "species": "randomcolor"},
-                  {"sepalLength": Math.random() * 10.0, "sepalWidth": Math.random() + 3.0, "petalLength": Math.random() * 10.0, "petalWidth": Math.random() + 1, "species": "randomcolor"}
-                ].concat(scatter.options.data));
+                scatter.update({
+                  "data": scatter.options.data.concat([
+                    {"sepalLength": Math.random() * 10.0, "sepalWidth": Math.random() + 3.0, "petalLength": Math.random() * 10.0, "petalWidth": Math.random() + 1, "species": "randomcolor"},
+                    {"sepalLength": Math.random() * 10.0, "sepalWidth": Math.random() + 3.0, "petalLength": Math.random() * 10.0, "petalWidth": Math.random() + 1, "species": "randomcolor"},
+                    {"sepalLength": Math.random() * 10.0, "sepalWidth": Math.random() + 3.0, "petalLength": Math.random() * 10.0, "petalWidth": Math.random() + 1, "species": "randomcolor"},
+                    {"sepalLength": Math.random() * 10.0, "sepalWidth": Math.random() + 3.0, "petalLength": Math.random() * 10.0, "petalWidth": Math.random() + 1, "species": "randomcolor"},
+                    {"sepalLength": Math.random() * 10.0, "sepalWidth": Math.random() + 3.0, "petalLength": Math.random() * 10.0, "petalWidth": Math.random() + 1, "species": "randomcolor"},
+                    {"sepalLength": Math.random() * 10.0, "sepalWidth": Math.random() + 3.0, "petalLength": Math.random() * 10.0, "petalWidth": Math.random() + 1, "species": "randomcolor"}
+                  ])
+                });
               });
             </script>
           </div>
           <!--/scatter-->
+
+          <!-- bar -->
+          <div id="bar" class="row-fluid">
+            <h2>Bar</h2>
+            <p>Bar graphs are good for comparing series of data against each other.
+            The cookbook's bar graph also accepts data to draw a line on top of the bars.
+            This is useful for showing things like averages.</p>
+            <div class="vis"></div>
+            <button type="button" class="btn update">Update visualization with random data</button>
+            <button type="button" class="btn append">Append random data to the visualization</button>
+            <button type="button" class="btn addline">Add a random line to the graph</button>
+            <h4>Data Sample:</h4>
+            <span>Full data set can be found in <a href="./data/letter_frequency.json">letter_frequency.json</a>.</span>
+            <pre>[
+  {"dialect": "us_english", "letter": "A", "frequency": 0.08167},
+  {"dialect": "us_english", "letter": "B", "frequency": 0.01492},
+  {"dialect": "us_english", "letter": "C", "frequency": 0.02780},
+  ...
+]</pre>
+            <script type="text/javascript">
+              var bar = null;
+              $(document).on('ready', function() {
+                d3.json('./data/letter_frequency.json', function(err, json) {
+                  bar = new Recipe['bar']({
+                    "data": json,
+                    "selector": "#bar .vis",
+                    "xKey": "letter",
+                    "yKey": "frequency",
+                    "yFormatter": function(d) { return +d; },
+                    "xAxisLabel": "Letter",
+                    "yAxisLabel": "Frequency",
+                    "yAxisFormatter": function(d) { return d3.round(d, 2); },
+                    "width": 1200,
+                    "seriesKey": "dialect"
+                  });
+                });
+              })
+              .on('click', '#bar button.btn.update', function(e) {
+                _.each(bar.options.data, function(d, i) {
+                  d.frequency = Math.random();
+                });
+                bar.update();
+              })
+              .on('click', '#bar button.btn.append', function(e) {
+                bar.update({
+                  "data": bar.options.data.concat([
+                    {"dialect": "uk_english", "letter": "A", "frequency": Math.random()},
+                    {"dialect": "uk_english", "letter": "B", "frequency": Math.random()},
+                    {"dialect": "uk_english", "letter": "C", "frequency": Math.random()},
+                    {"dialect": "uk_english", "letter": "D", "frequency": Math.random()},
+                    {"dialect": "uk_english", "letter": "E", "frequency": Math.random()},
+                    {"dialect": "uk_english", "letter": "F", "frequency": Math.random()},
+                    {"dialect": "uk_english", "letter": "G", "frequency": Math.random()},
+                    {"dialect": "uk_english", "letter": "H", "frequency": Math.random()},
+                    {"dialect": "uk_english", "letter": "I", "frequency": Math.random()},
+                    {"dialect": "uk_english", "letter": "J", "frequency": Math.random()},
+                    {"dialect": "uk_english", "letter": "K", "frequency": Math.random()},
+                    {"dialect": "uk_english", "letter": "L", "frequency": Math.random()},
+                    {"dialect": "uk_english", "letter": "M", "frequency": Math.random()},
+                    {"dialect": "uk_english", "letter": "N", "frequency": Math.random()},
+                    {"dialect": "uk_english", "letter": "O", "frequency": Math.random()},
+                    {"dialect": "uk_english", "letter": "P", "frequency": Math.random()},
+                    {"dialect": "uk_english", "letter": "Q", "frequency": Math.random()},
+                    {"dialect": "uk_english", "letter": "R", "frequency": Math.random()},
+                    {"dialect": "uk_english", "letter": "S", "frequency": Math.random()},
+                    {"dialect": "uk_english", "letter": "T", "frequency": Math.random()},
+                    {"dialect": "uk_english", "letter": "U", "frequency": Math.random()},
+                    {"dialect": "uk_english", "letter": "V", "frequency": Math.random()},
+                    {"dialect": "uk_english", "letter": "W", "frequency": Math.random()},
+                    {"dialect": "uk_english", "letter": "X", "frequency": Math.random()},
+                    {"dialect": "uk_english", "letter": "Y", "frequency": Math.random()},
+                    {"dialect": "uk_english", "letter": "Z", "frequency": Math.random()}
+                  ])
+                });
+              })
+              .on('click', '#bar button.btn.addline', function(e) {
+                bar.update({
+                  "lData": [
+                    {"letter": "A", "avg": Math.random()},
+                    {"letter": "B", "avg": Math.random()},
+                    {"letter": "C", "avg": Math.random()},
+                    {"letter": "D", "avg": Math.random()},
+                    {"letter": "E", "avg": Math.random()},
+                    {"letter": "F", "avg": Math.random()},
+                    {"letter": "G", "avg": Math.random()},
+                    {"letter": "H", "avg": Math.random()},
+                    {"letter": "I", "avg": Math.random()},
+                    {"letter": "J", "avg": Math.random()},
+                    {"letter": "K", "avg": Math.random()},
+                    {"letter": "L", "avg": Math.random()},
+                    {"letter": "M", "avg": Math.random()},
+                    {"letter": "N", "avg": Math.random()},
+                    {"letter": "O", "avg": Math.random()},
+                    {"letter": "P", "avg": Math.random()},
+                    {"letter": "Q", "avg": Math.random()},
+                    {"letter": "R", "avg": Math.random()},
+                    {"letter": "S", "avg": Math.random()},
+                    {"letter": "T", "avg": Math.random()},
+                    {"letter": "U", "avg": Math.random()},
+                    {"letter": "V", "avg": Math.random()},
+                    {"letter": "W", "avg": Math.random()},
+                    {"letter": "X", "avg": Math.random()},
+                    {"letter": "Y", "avg": Math.random()},
+                    {"letter": "Z", "avg": Math.random()}
+                  ],
+                  "lKey": "avg",
+                  "lAxisLabel": "Average (actually random)",
+                  "lFormatter": function(d) { return +d; }
+                });
+              });
+            </script>
+          </div>
+          <!--/bar-->
+
+          <!-- heatmap -->
+          <div id="heatmap" class="row-fluid">
+            <h2>Heatmap</h2>
+            <p>Heatmaps are useful for showing statistics (such as averages) over a repeated time period.</p>
+            <div class="vis"></div>
+            <button type="button" class="btn update">Update visualization with random data</button>
+            <h4>Data Sample:</h4>
+            <span>Full data set can be found in <a href="./data/avgcpubusy.json">avgcpubusy.json</a>.</span>
+            <pre>[
+  {"timestamp": "11/1/2012 00:00:00", "avgcpubusy": 86.41},
+  {"timestamp": "11/1/2012 00:10:00", "avgcpubusy": 82.04},
+  {"timestamp": "11/1/2012 00:20:00", "avgcpubusy": 96.33},
+  ...
+]</pre>
+            <script type="text/javascript">
+              var heatmap = null;
+              $(document).on('ready', function() {
+                d3.json('./data/avgcpubusy.json', function(err, json) {
+                  heatmap = new Recipe['heatmap']({
+                    "data": json,
+                    "selector": "#heatmap .vis",
+                    "width": 1200,
+                    "valueKey": "avgcpubusy",
+                    "valueFormatter": function(d) { return d3.round(d, 2); }
+                  });
+                });
+              })
+              .on('click', '#heatmap button.btn.update', function(e) {
+                _.each(heatmap.options.data, function(d, i) {
+                  d.avgcpubusy = Math.random() * 100;
+                });
+                heatmap.update();
+              });
+            </script>
+          </div>
+          <!--/heatmap-->
 
         </div>
         <!--/home-->

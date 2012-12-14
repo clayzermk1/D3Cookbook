@@ -1,4 +1,4 @@
-/*! D3Cookbook - v0.1.0 - 2012-12-13
+/*! D3Cookbook - v0.1.0 - 2012-12-14
 * https://github.com/clayzermk1/D3Cookbook
 * Copyright (c) 2012 ; Licensed  */
 
@@ -81,25 +81,12 @@ var Recipe = Class.extend({
         .attr("height", this.options.height + this.options.margin.top + this.options.margin.bottom)
       .append("g");
 
-    this.parseData(this.options.data);
-
     return this;
   },
 
-  parseData: function(data) {
-    this.options.data = _.clone(data, true);
-  },
-
-  update: function(data) {
-    // Update the data.
-    if (!_.isUndefined(data)) {
-      this.parseData(data);
-    } else {
-      this.parseData(this.options.data);
-    }
-
-    // Redraw the graph.
-    this.drawGraph();
+  update: function(options) {
+    this.options = _.extend(this.options, options);
+    this.parseData();
   }
 });
 
@@ -117,25 +104,31 @@ Recipe['pie'] = Recipe.extend({
     colors: d3.scale.category10()
   },
 
-  init: function(data, options){
-    this._super(data, options);
+  init: function(options){
+    this._super(options);
 
     this.svg.attr("transform", "translate(" + ( (this.options.width / 2) + this.options.margin.left ) + "," + ( (this.options.height / 2) + this.options.margin.top ) + ")");
 
-    this.drawGraph();
+    this.parseData();
+
+    this.drawVis();
 
     return this;
   },
 
-  parseData: function(data) {
-    this._super(data);
-
+  parseData: function() {
     _.each(this.options.data, function(d) {
+      try {
         d[this.options.valueKey] = this.options.valueFormatter(d[this.options.valueKey]);
+      } catch (e) {
+        if (!(e instanceof TypeError)) {
+          throw e;
+        }
+      }
     }, this);
   },
 
-  drawGraph: function() {
+  drawVis: function() {
     var labelKey = this.options.labelKey;
     var valueKey = this.options.valueKey;
     var colors = this.options.colors;
@@ -175,6 +168,12 @@ Recipe['pie'] = Recipe.extend({
       .attr("transform", function(d) { return "translate(" + arc.centroid(d) + ")"; })
       .attr("dy", ".35em")
       .style("text-anchor", "middle");
+  },
+
+  update: function(options) {
+    this._super(options);
+
+    this.drawVis();
   }
 });
 
@@ -203,21 +202,21 @@ Recipe['_cartesian'] = Recipe.extend({
   xAxis: null,
   yAxis: null,
 
-  init: function(data, options){
-    this._super(data, options);
+  init: function(options){
+    this._super(options);
 
     this.svg.attr("transform", "translate(" + this.options.margin.left + "," + this.options.margin.top + ")");
 
+    this.parseData();
+
     this.createScales();
-    this.drawGraph();
+    this.drawVis();
     this.createAxes();
 
     return this;
   },
 
-  parseData: function(data) {
-    this._super(data);
-
+  parseData: function() {
     _.each(this.options.data, function(d) {
       try {
         d[this.options.xKey] = this.options.xFormatter(d[this.options.xKey]);
@@ -254,14 +253,6 @@ Recipe['_cartesian'] = Recipe.extend({
       .domain(d3.extent(this.options.data, function(d) { return d[yKey]; }))
       .range([this.options.height, 0])
       .nice();
-  },
-
-  updateScales: function() {
-    var xKey = this.options.xKey;
-    var yKey = this.options.yKey;
-
-    this.x.domain(d3.extent(this.options.data, function(d) { return d[xKey]; }));
-    this.y.domain(d3.extent(this.options.data, function(d) { return d[yKey]; })).nice();
   },
 
   createAxes: function() {
@@ -310,28 +301,20 @@ Recipe['_cartesian'] = Recipe.extend({
       .style("font-size", "10px");
   },
 
-  update: function(data) {
-    // Update the data.
-    if (!_.isUndefined(data)) {
-      this.parseData(data);
-    } else {
-      this.parseData(this.options.data);
-    }
+  update: function(options) {
+    this._super(options);
 
-    // Update the scale domains.
-    this.updateScales();
+    this.createScales();
 
-    // Redraw the graph.
-    this.drawGraph();
+    this.drawVis();
 
-    // Redraw the axes.
     this.svg.selectAll(".axis").remove();
     this.drawAxes();
   }
 });
 
 Recipe['line'] = Recipe['_cartesian'].extend({
-  drawGraph: function() {
+  drawVis: function() {
     var x = this.x;
     var y = this.y;
     var xKey = this.options.xKey;
@@ -365,7 +348,7 @@ Recipe['line'] = Recipe['_cartesian'].extend({
 });
 
 Recipe['area'] = Recipe['_cartesian'].extend({
-  drawGraph: function() {
+  drawVis: function() {
     var x = this.x;
     var y = this.y;
     var xKey = this.options.xKey;
@@ -405,7 +388,7 @@ Recipe['bar'] = Recipe.extend({
     margin: {top: 50, right: 50, bottom: 50, left: 50},
     height: 500,
     width: 500,
-    lData: null,
+    lData: [],
     xKey: "x",
     yKey: "y",
     lKey: "",
@@ -427,7 +410,6 @@ Recipe['bar'] = Recipe.extend({
   },
 
   nest: null,
-  lData: null,
   x: null,
   x1: null,
   y: null,
@@ -436,26 +418,36 @@ Recipe['bar'] = Recipe.extend({
   yAxis: null,
   lAxis: null,
 
-  init: function(data, options){
-    this._super(data, options);
-
-    this.parseLineData(this.options.lData);
+  init: function(options){
+    this._super(options);
 
     this.svg.attr("transform", "translate(" + this.options.margin.left + "," + this.options.margin.top + ")");
 
+    this.parseData();
+
     this.createScales();
-    this.drawGraph();
+    this.drawVis();
     this.createAxes();
 
     return this;
   },
 
-  parseData: function(data) {
-    this._super(data);
-
-    _.each(this.data, function(d) {
+  parseData: function() {
+    _.each(this.options.data, function(d) {
+      try {
         d[this.options.xKey] = this.options.xFormatter(d[this.options.xKey]);
+      } catch (e) {
+        if (!(e instanceof TypeError)) {
+          throw e;
+        }
+      }
+      try {
         d[this.options.yKey] = this.options.yFormatter(d[this.options.yKey]);
+      } catch (e) {
+        if (!(e instanceof TypeError)) {
+          throw e;
+        }
+      }
     }, this);
 
     // Nest the data by x and then series.
@@ -464,15 +456,20 @@ Recipe['bar'] = Recipe.extend({
     this.nest = d3.nest()
       .key(function(d) { return d[xKey]; })
       .key(function(d) { return d[seriesKey]; })
-      .entries(this.data);
-  },
+      .entries(this.options.data);
 
-  parseLineData: function(lData) {
-    this.lData = _.clone(lData, true);
-
-    _.each(this.lData, function(d) {
-        d[this.options.lKey] = this.options.lFormatter(d[this.options.lKey]);
-    }, this);
+    // Parse any line data.
+    if (!_.isEmpty(this.options.lData)) {
+      _.each(this.options.lData, function(d) {
+        try {
+          d[this.options.lKey] = this.options.lFormatter(d[this.options.lKey]);
+        } catch (e) {
+        if (!(e instanceof TypeError)) {
+          throw e;
+        }
+      }
+      }, this);
+    }
   },
 
   createScales: function() {
@@ -482,38 +479,23 @@ Recipe['bar'] = Recipe.extend({
     var seriesKey = this.options.seriesKey;
 
     this.x = this.options.xScale()
-      .domain(_.chain(this.data).pluck(xKey).uniq().value())
+      .domain(_.chain(this.options.data).pluck(xKey).uniq().value())
       .rangeRoundBands([0, this.options.width], 0.1);
 
     this.x1 = this.options.xScale()
-      .domain(_.chain(this.data).pluck(seriesKey).uniq().value())
+      .domain(_.chain(this.options.data).pluck(seriesKey).uniq().value())
       .rangeRoundBands([0, this.x.rangeBand()]);
 
     this.y = this.options.yScale()
-      .domain([0, d3.max(this.data, function(d) { return d[yKey]; })])
+      .domain([0, d3.max(this.options.data, function(d) { return d[yKey]; })])
       .range([this.options.height, 0])
       .nice();
 
     if (!_.isEmpty(lKey)) {
       this.l = this.options.lScale()
-        .domain(d3.extent(this.lData, function(d) { return d[lKey]; }))
+        .domain(d3.extent(this.options.lData, function(d) { return d[lKey]; }))
         .range([this.options.height, 0])
         .nice();
-    }
-  },
-
-  updateScales: function() {
-    var xKey = this.options.xKey;
-    var yKey = this.options.yKey;
-    var lKey = this.options.lKey;
-    var seriesKey = this.options.seriesKey;
-
-    this.x.domain(_.chain(this.data).pluck(xKey).uniq().value());
-    this.x1.domain(_.chain(this.data).pluck(seriesKey).uniq().value());
-    this.y.domain([0, d3.max(this.data, function(d) { return d[yKey]; })]).nice();
-
-    if (!_.isEmpty(lKey)) {
-      this.l.domain(d3.extent(this.lData, function(d) { return d[lKey]; })).nice();
     }
   },
 
@@ -584,7 +566,7 @@ Recipe['bar'] = Recipe.extend({
       .style("font-size", "10px");
   },
 
-  drawGraph: function() {
+  drawVis: function() {
     var x = this.x;
     var x1 = this.x1;
     var y = this.y;
@@ -622,7 +604,7 @@ Recipe['bar'] = Recipe.extend({
     bars.exit().remove();
 
     bars
-      .attr("id", function(s) { return s.key; })
+      .attr("class", function(s) { return "bar " + s.key; })
       .attr("transform", function(d) { return "translate(" + x(d.values[0][xKey]) + ", 0)"; });
 
     bars.selectAll("rect")
@@ -651,7 +633,7 @@ Recipe['bar'] = Recipe.extend({
           .attr("class", "line")
           .attr("transform", "translate(" + (x.rangeBand() / 2) + ", 0)")
           .append("path")
-            .datum(this.lData)
+            .datum(this.options.lData)
             .attr("d", d3.svg.line()
               .x(function(d) { return x(d[xKey]); })
               .y(function(d) { return l(d[lKey]); })
@@ -662,34 +644,15 @@ Recipe['bar'] = Recipe.extend({
     }
   },
 
-  update: function(data) {
-    // Update the data.
-    this.parseData(data);
+  update: function(options) {
+    this._super(options);
 
-    // Update the scale domains.
-    this.updateScales();
+    this.createScales();
 
-    // Redraw the graph.
-    this.drawGraph();
+    this.drawVis();
 
-    // Redraw the axes.
     this.svg.selectAll(".axis").remove();
-    this.drawAxes();
-  },
-
-  updateLine: function(lData) {
-    // Update the line data.
-    this.parseLineData(lData);
-
-    // Update the scale domains.
-    this.updateScales();
-
-    // Redraw the graph.
-    this.drawGraph();
-
-    // Redraw the axes.
-    this.svg.selectAll(".axis").remove();
-    this.drawAxes();
+    this.createAxes();
   }
 });
 
@@ -732,7 +695,7 @@ Recipe['scatter'] = Recipe['_cartesian'].extend({
     this._super();
   },
 
-  drawGraph: function() {
+  drawVis: function() {
     var x = this.x;
     var y = this.y;
     var xKey = this.options.xKey;
@@ -1005,25 +968,43 @@ Recipe['heatmap'] = Recipe.extend({
   xAxis: null,
   yAxis: null,
 
-  init: function(data, options){
-    this._super(data, options);
+  init: function(options){
+    this._super(options);
 
     this.svg.attr("transform", "translate(" + this.options.margin.left + "," + this.options.margin.top + ")");
 
+    this.parseData();
+
     this.createScales();
-    this.drawGraph();
+    this.drawVis();
     this.createAxes();
 
     return this;
   },
 
-  parseData: function(data) {
-    this._super(data);
-
-    _.each(this.data, function(d) {
+  parseData: function() {
+    _.each(this.options.data, function(d) {
+      try {
         d[this.options.timestampKey] = this.options.timestampFormatter(d[this.options.timestampKey]);
+      } catch (e) {
+        if (!(e instanceof TypeError)) {
+          throw e;
+        }
+      }
+      try {
         d[this.options.xKey] = this.options.xFormatter(d[this.options.timestampKey]);
+      } catch (e) {
+        if (!(e instanceof TypeError)) {
+          throw e;
+        }
+      }
+      try {
         d[this.options.yKey] = this.options.yFormatter(d[this.options.timestampKey]);
+      } catch (e) {
+        if (!(e instanceof TypeError)) {
+          throw e;
+        }
+      }
     }, this);
 
     // Nest the data by y then x.
@@ -1031,9 +1012,7 @@ Recipe['heatmap'] = Recipe.extend({
     var yKey = this.options.yKey;
     this.nest = d3.nest()
       .key(function(d) { return d[yKey] + d[xKey]; })
-      .entries(this.data);
-
-    console.log(this.nest);
+      .entries(this.options.data);
   },
 
   createScales: function() {
@@ -1105,7 +1084,7 @@ Recipe['heatmap'] = Recipe.extend({
       .style("font-size", "10px");
   },
 
-  drawGraph: function() {
+  drawVis: function() {
     var x = this.x;
     var y = this.y;
     var valueKey = this.options.valueKey;
@@ -1148,14 +1127,11 @@ Recipe['heatmap'] = Recipe.extend({
       .style("font-size", "10px");
   },
 
-  update: function(data) {
-    // Update the data.
-    this.parseData(data);
+  update: function(options) {
+    this._super(options);
 
-    // Redraw the graph.
-    this.drawGraph();
+    this.drawVis();
 
-    // Redraw the axes.
     this.svg.selectAll(".axis").remove();
     this.drawAxes();
   }
