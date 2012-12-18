@@ -1,4 +1,4 @@
-/*! D3Cookbook - v0.1.0 - 2012-12-14
+/*! D3Cookbook - v0.1.0 - 2012-12-17
 * https://github.com/clayzermk1/D3Cookbook
 * Copyright (c) 2012 ; Licensed  */
 
@@ -738,117 +738,205 @@ Recipe['scatter'] = Recipe['_cartesian'].extend({
   }
 });
 
-Recipe['spider'] = Recipe.extend({ //TODO incomplete! need to merge in changes from cartesian and build out in general.
+Recipe['spider'] = Recipe.extend({
   defaultOptions: {
+    margin: {top: 50, right: 50, bottom: 50, left: 50},
+    height: 500,
+    width: 500,
     r: 250,
-    rh: 50,
-    interpolation: "cardinal-closed",
-    xAxisFormatter: function(d) { return d; },
-    yAxisFormatter: d3.format(".0%"),
+    rh: 0,
+    xKey: "x",
+    yKey: "y",
     xFormatter: function(d) { return d; },
-    yFormatter: function(d) { return +d; }
+    yFormatter: function(d) { return d; },
+    xScale: d3.scale.ordinal,
+    yScale: d3.scale.linear,
+    xAxisFormatter: function(d) { return d; },
+    yAxisFormatter: function(d) { return d; },
+    seriesKey: "",
+    colors: d3.scale.category10()
   },
 
+  nest: null,
   x: null,
   y: null,
   xAxis: null,
   yAxis: null,
 
-  init: function(recipe){
-    this.options = _.defaults(recipe.options, this.defaultOptions);
-    this.svg = recipe.svg.attr("transform", "translate(" + ( (this.options.width / 2) + this.options.margin.left ) + "," + ( (this.options.height / 2) + this.options.margin.top ) + ")");
-    this.data = recipe.data;
+  init: function(options){
+    this._super(options);
 
-    // Format data.
-    _.each(this.data.series, function(s) {
-      _.each(s.data, function(d) {
-        d.x = this.options.xFormatter(d.x);
-        d.y = this.options.yFormatter(d.y);
-      }, this);
-    }, this);
+    this.svg.attr("transform", "translate(" + ( (this.options.width / 2) + this.options.margin.left ) + "," + ( (this.options.height / 2) + this.options.margin.top ) + ")");
+
+    this.parseData();
 
     this.createScales();
-    this.createAxes();
-    this.draw();
     this.drawAxes();
+    this.drawVis();
 
     return this;
   },
 
-  createScales: function() {
-    this.x = d3.time.scale()
-      .domain([
-        0,
-        _.chain(this.data.series)
-          .reduce(function(m, d) {
-            return m.concat(d.data);
-          }, [])
-          .pluck("x")
-          .uniq()
-          .sortBy("value")
-          .value().length
-      ])
-      .range([0, 2 * Math.PI]);
+  parseData: function() {
+    _.each(this.options.data, function(d) {
+      try {
+        d[this.options.xKey] = this.options.xFormatter(d[this.options.xKey]);
+      } catch (e) {
+        if (!(e instanceof TypeError)) {
+          throw e;
+        }
+      }
+      try {
+        d[this.options.yKey] = this.options.yFormatter(d[this.options.yKey]);
+      } catch (e) {
+        if (!(e instanceof TypeError)) {
+          throw e;
+        }
+      }
+    }, this);
 
-    this.y = d3.scale.linear()
-      .domain([0, d3.max(this.data, function(d) { return d; })]) //TODO check this
-      .range([this.options.r, this.options.rh]);
+    // Nest the data by series.
+    var seriesKey = this.options.seriesKey;
+    this.nest = d3.nest()
+      .key(_.isFunction(seriesKey) ? seriesKey : function(d) { return d[seriesKey]; })
+      .entries(this.options.data);
   },
 
-  createAxes: function() {
-    this.xAxis = d3.svg.axis()
-      .scale(this.x)
-      .orient("bottom")
-      .tickFormat(this.options.xAxisFormatter);
-    this.yAxis = d3.svg.axis()
-      .scale(this.y)
-      .orient("left")
-      .tickFormat(this.options.yAxisFormatter);
+  createScales: function() {
+    var xKey = this.options.xKey;
+    var yKey = this.options.yKey;
+
+    this.x = this.options.xScale()
+      .domain(_.chain(this.options.data).pluck(xKey).uniq().value())
+      .rangeBands([0, 2 * Math.PI]);
+
+    this.y = this.options.yScale()
+      .domain([0, d3.max(this.options.data, function(d) { return d[yKey]; })])
+      .range([this.options.rh, this.options.r])
+      .nice();
   },
 
   drawAxes: function() {
     var x = this.x;
     var y = this.y;
     var r = this.options.r;
-    var rh = this.options.rh;
+    var xKey = this.options.xKey;
     var xAxisFormatter = this.options.xAxisFormatter;
 
-    this.svg.selectAll(".axis")
-      .data(d3.range(x.domain()[1]))
+    var arc = d3.svg.arc()
+      .outerRadius(this.options.r)
+      .innerRadius(this.options.rh);
+
+    var gridline = d3.svg.line.radial()
+      .interpolate("linear-closed")
+      .angle(function(d) { return x(d.x); })
+      .radius(function(d) { return y(d.y); });
+
+    this.svg
+      .append("g")
+      .attr("class", "y gridlines")
+      .selectAll(".y.gridline")
+        .data(
+          _.map(_.range(y.domain()[0] + 1, y.domain()[1] + 1), function(d) {
+            return _.map(x.domain(), function(d) {
+              return _.extend({"x": d}, this);
+            }, {"y": d});
+          })
+        )
+        .enter()
+        .append("path")
+            .attr("d", function(d) {
+              return gridline(d); })
+            .attr("class", "y gridline");
+
+    d3.selectAll('.gridline')
+      .style("fill", "none")
+      .style("stroke", "silver");
+
+    this.yAxis = d3.svg.axis()
+      .scale(this.y.copy().range([-this.options.rh, -this.options.r]))
+      .orient("left")
+      .tickFormat(this.options.yAxisFormatter);
+
+    this.svg.selectAll(".y.axis")
+      .data(x.domain())
       .enter()
       .append("g")
-        .attr("class", "axis")
-        .attr("transform", function(d) { return "rotate(" + x(d) * 180 / Math.PI + ")"; })
-        .call(d3.svg.axis()
-          .scale(y.copy().range([-rh, -r]))
-          .orient("left"))
+        .attr("class", "y axis")
+        .attr("transform", function(d) { return "rotate(" + (x(d) * 180 / Math.PI) + ")"; })
+        .call(this.yAxis)
         .append("text")
-          .attr("y", -r - 12)
+          .attr("transform", function(d) {
+            return "rotate(" + (-x(d) * 180 / Math.PI) + ") translate(" + ((r + 18) * Math.sin(x(d))) + ", " + (-(r + 18) * Math.cos(x(d))) + ")"; })
           .attr("dy", ".71em")
-          .attr("text-anchor", "middle")
+          .style("text-anchor", function(d) {
+            var rads = x(d);
+            if ( (rads > 7 * Math.PI / 4 && rads < Math.PI / 4) || (rads > 3 * Math.PI / 4 && rads < 5 * Math.PI / 4) ) {
+              return "middle";
+            } else if (rads >= Math.PI / 4 && rads <= 3 * Math.PI / 4) {
+              return "start";
+            } else if (rads >= 5 * Math.PI / 4 && rads <= 7 * Math.PI / 4) {
+              return "end";
+            } else {
+              return "middle";
+            }
+          })
           .text(function(d) { return xAxisFormatter(d); });
+
+    d3.selectAll('.axis path, .axis line')
+      .style("fill", "none")
+      .style("stroke", "silver");
+
+    d3.selectAll('.axis text')
+      .style("fill", "#666")
+      .style("font-size", "10px");
   },
 
-  draw: function() {
+  drawVis: function() {
     var x = this.x;
     var y = this.y;
-    var area = d3.svg.area.radial()
-      .interpolate(this.options.interpolation)
-      .angle(function(d) {
-        return x(d.x); })
-      .innerRadius(function(d) {
-        return y(0); })
-      .outerRadius(function(d) {
-        return y(d.y); });
+    var xKey = this.options.xKey;
+    var yKey = this.options.yKey;
+    var colors = this.options.colors;
+    var rh = this.options.rh;
 
-    this.svg.selectAll(".series")
-      .data(this.data.series)
+    var area = d3.svg.area.radial()
+      .interpolate("linear-closed")
+      .angle(function(d) { return x(d[xKey]); })
+      .innerRadius(function(d) { return y(rh); })
+      .outerRadius(function(d) { return y(d[yKey]); });
+
+    var series = this.svg.selectAll(".series")
+      .data(this.nest);
+
+    series
       .enter()
-      .append("path")
-        .attr("class", "layer")
-        .attr("d", function(s) {
-          return area(s.data); })
-        .style("fill", function(s) { return s.style && s.style['fill'] ? s.style['fill'] : 'steelblue'; });
+      .append("g")
+        .attr("class", "series")
+        .append("path");
+
+    series.exit().remove();
+
+    series.attr("id", function(s) { return s.key; });
+
+    series.select("path")
+      .attr("d", function(s) {
+        return area(s.values); })
+      .style("fill", function(d) { return colors(d.key); })
+      .style("fill-opacity", 0.5)
+      .style("stroke", function(d) { return colors(d.key); })
+      .style("stroke-width", '1px');
+  },
+
+  update: function(options) {
+    this._super(options);
+
+    this.createScales();
+
+    this.svg.selectAll(".axis").remove();
+    this.drawAxes();
+
+    this.drawVis();
   }
 });
 
