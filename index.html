@@ -524,6 +524,51 @@
           </div>
           <!--/heatmap-->
 
+          <!-- spider -->
+          <div id="spider" class="row-fluid">
+            <h2>Spider</h2>
+            <p>Spider charts are essentially an area or line chart with a discrete number of x values wrapped around a central axis.</p>
+            <div class="vis"></div>
+            <button type="button" class="btn update">Update visualization with random data</button>
+            <h4>Data:</h4>
+            <pre>[
+  {"series": "a", "letter": "Alpha", "frequency": 1.5},
+  {"series": "a", "letter": "Bravo", "frequency": 2.3},
+  {"series": "a", "letter": "Charlie", "frequency": 4.9},
+  {"series": "a", "letter": "Delta", "frequency": 3.4},
+  {"series": "a", "letter": "Echo", "frequency": 2.8},
+  {"series": "b", "letter": "Alpha", "frequency": 1.8},
+  {"series": "b", "letter": "Bravo", "frequency": 3.3},
+  {"series": "b", "letter": "Charlie", "frequency": 5.0},
+  {"series": "b", "letter": "Delta", "frequency": 0.5},
+  {"series": "b", "letter": "Echo", "frequency": 4.7},
+  {"series": "c", "letter": "Alpha", "frequency": 0.2},
+  {"series": "c", "letter": "Bravo", "frequency": 1.6},
+  {"series": "c", "letter": "Charlie", "frequency": 4.7},
+  {"series": "c", "letter": "Delta", "frequency": 2.2},
+  {"series": "c", "letter": "Echo", "frequency": 1.0}
+]</pre>
+            <script type="text/javascript">
+              var spider = null;
+              $(document).on('ready', function() {
+                spider = new Recipe['spider']({
+                  "data": JSON.parse($('#spider pre').text()),
+                  "selector": "#spider .vis",
+                  "xKey": "letter",
+                  "yKey": "frequency",
+                  "seriesKey": "series"
+                });
+              })
+              .on('click', '#spider button.btn.update', function(e) {
+                _.each(spider.options.data, function(d, i) {
+                  d.frequency = Math.random() * 5;
+                });
+                spider.update();
+              });
+            </script>
+          </div>
+          <!--/spider-->
+
         </div>
         <!--/home-->
         <div id="pie" class="span9 hide">
