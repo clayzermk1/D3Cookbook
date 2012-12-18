@@ -934,6 +934,7 @@ Recipe['spider'] = Recipe.extend({
     this.createScales();
 
     this.svg.selectAll(".axis").remove();
+    this.svg.selectAll(".gridlines").remove();
     this.drawAxes();
 
     this.drawVis();
